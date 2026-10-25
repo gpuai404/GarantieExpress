@@ -194,3 +194,97 @@ jobs:
             artifacts/package/windows/win-${{ matrix.architecture }}/installer/*.sha256
           if-no-files-found: error
           retention-days: 14
+
+  macos-package:
+    name: macOS package (${{ matrix.architecture }})
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [x64, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build unsigned PKG
+        shell: bash
+        run: ./packaging/macos/build-package.sh --architecture ${{ matrix.architecture }} --version ${{ needs.validate.outputs.application-version }} --unsigned
+
+      - name: Upload unsigned PKG
+        uses: actions/upload-artifact@v4
+        with:
+          name: garantie-express-macos-${{ matrix.architecture }}
+          path: |
+            artifacts/package/macos/osx-${{ matrix.architecture }}/installer/*.pkg
+            artifacts/package/macos/osx-${{ matrix.architecture }}/installer/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  github-release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [validate, windows-package, macos-package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: garantie-express-win-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download macOS packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: garantie-express-macos-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Verify release assets
+        shell: bash
+        env:
+          APPLICATION_VERSION: ${{ needs.validate.outputs.application-version }}
+        run: |
+          expected_assets=(
+            "GarantieExpress-$APPLICATION_VERSION-win-x64.msi"
+            "GarantieExpress-$APPLICATION_VERSION-win-x64.msi.sha256"
+            "GarantieExpress-$APPLICATION_VERSION-win-arm64.msi"
+            "GarantieExpress-$APPLICATION_VERSION-win-arm64.msi.sha256"
+            "GarantieExpress-$APPLICATION_VERSION-osx-x64.pkg"
+            "GarantieExpress-$APPLICATION_VERSION-osx-x64.pkg.sha256"
+            "GarantieExpress-$APPLICATION_VERSION-osx-arm64.pkg"
+            "GarantieExpress-$APPLICATION_VERSION-osx-arm64.pkg.sha256"
+          )
+
+          for asset in "${expected_assets[@]}"; do
+            if [[ ! -f "release-assets/$asset" ]]; then
+              echo "Missing release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+      - name: Create or update GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPLICATION_VERSION: ${{ needs.validate.outputs.application-version }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/* \
+              --verify-tag \
+              --title "GarantieExpress $APPLICATION_VERSION" \
+              --generate-notes
+          fi
