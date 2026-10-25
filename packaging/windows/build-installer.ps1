@@ -144,7 +144,10 @@ if (-not $Unsigned) {
 
 $checksumPath = "$($msi.FullName).sha256"
 $checksum = (Get-FileHash -LiteralPath $msi.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-Set-Content -LiteralPath $checksumPath -Value "$checksum *$($msi.Name)" -Encoding ascii
+[IO.File]::WriteAllText(
+    $checksumPath,
+    "$checksum *$($msi.Name)`n",
+    [Text.Encoding]::ASCII)
 
 Write-Output $msi.FullName
 Write-Output $checksumPath
