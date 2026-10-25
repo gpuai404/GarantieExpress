@@ -1,0 +1,293 @@
+@page "/producten"
+
+<PageTitle>@Localization["Products_Title"] · GarantieExpress</PageTitle>
+<div class="products-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">@Localization["Products_Eyebrow"]</p>
+            <h1>@Localization["Products_Title"]</h1>
+            <p>@Localization["Products_Intro"]</p>
+        </div>
+        @if (!_loading && !_loadFailed)
+        {
+            <button type="button" class="button primary" @onclick="StartNew">@Localization["Products_New"]</button>
+        }
+    </div>
+
+    @if (_loading)
+    {
+        <p class="notice">@Localization["Products_Loading"]</p>
+    }
+    else if (_loadFailed)
+    {
+        <div class="notice error" role="alert">@(_message ?? Localization["Products_LoadFailed"])</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(_message))
+        {
+            <div class="notice @(_failed ? "error" : "success")" role="status">@_message</div>
+        }
+
+        @if (_editing)
+        {
+            <section class="product-editor form-card">
+                <div class="section-heading">
+                    <span>01</span>
+                    <div>
+                        <h2>@(_editingId is null ? Localization["Products_Create"] : Localization["Products_Edit"])</h2>
+                        <p>@Localization["Products_Intro"]</p>
+                    </div>
+                </div>
+
+                <div class="product-fields">
+                    <label>
+                        @Localization["Products_BrandModel"]
+                        <input @bind="_brandModel" maxlength="180" autocomplete="off" />
+                    </label>
+                    <label>
+                        @Localization["Products_Category"]
+                        <select @bind="_categoryKey">
+                            <option value="">@Localization["Products_CategoryRequired"]</option>
+                            @foreach (var category in _categories)
+                            {
+                                <option value="@category.Key">
+                                    @(CategoryDisplay.DisplayName(category) + (category.IsArchived ? " · " + Localization["Categories_Archived"] : string.Empty))
+                                </option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        @Localization["Products_Price"]
+                        <input type="number" min="0.01" max="99999999" step="0.01" @bind="_price" />
+                    </label>
+                    <label>
+                        @Localization["Products_Duration"]
+                        <select @bind="_durationMonths">
+                            @foreach (var duration in _offeredDurations)
+                            {
+                                <option value="@duration">@DurationFormatter.FormatDuration(duration)</option>
+                            }
+                            @if (_editingId is not null && !_offeredDurations.Contains(_durationMonths))
+                            {
+                                <option value="@_durationMonths">@DurationFormatter.FormatDuration(_durationMonths)</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                <div class="editor-actions">
+                    <button type="button" class="button primary" disabled="@_saving" @onclick="SaveAsync">@(_saving ? Localization["Products_Loading"] : Localization["Products_Save"])</button>
+                    <button type="button" class="button secondary" disabled="@_saving" @onclick="CancelEdit">@Localization["Products_Cancel"]</button>
+                </div>
+            </section>
+        }
+
+        @if (_products.Count == 0)
+        {
+            <p class="notice">@Localization["Products_Empty"]</p>
+        }
+        else
+        {
+            <div class="product-list">
+                @foreach (var product in _products)
+                {
+                    <article class="product-card">
+                        <div>
+                            <h2>@product.BrandModel</h2>
+                            <p>@CategoryName(product.CategoryKey)</p>
+                            <strong>€ @((product.PriceCents / 100m).ToString("0.00")) · @DurationFormatter.FormatDuration(product.DurationMonths)</strong>
+                        </div>
+                        @if (_pendingDeleteId == product.Id)
+                        {
+                            <div class="product-actions" role="group" aria-label="@Localization["Products_DeleteConfirm"]">
+                                <span>@Localization["Products_DeleteConfirm"]</span>
+                                <button type="button" class="button secondary" disabled="@_saving" @onclick="CancelDelete">@Localization["Products_Cancel"]</button>
+                                <button type="button" class="button danger" disabled="@_saving" @onclick="ConfirmDeleteAsync">@Localization["Products_Delete"]</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="product-actions">
+                                <button type="button" class="button secondary" @onclick="() => StartEdit(product)">@Localization["Categories_EditAction"]</button>
+                                <button type="button" class="text-button" @onclick="() => RequestDelete(product)">@Localization["Products_Delete"]</button>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Inject] private ILocalizationService Localization { get; set; } = null!;
+    [Inject] private ProductCatalogService Products { get; set; } = null!;
+    [Inject] private CategoryCatalogService CategoryCatalog { get; set; } = null!;
+    [Inject] private CategoryDisplayResolver CategoryDisplay { get; set; } = null!;
+    [Inject] private StoreSettingsService Settings { get; set; } = null!;
+    [Inject] private WarrantyDurationFormatter DurationFormatter { get; set; } = null!;
+
+    private List<Product> _products = [];
+    private List<Category> _categories = [];
+    private List<int> _offeredDurations = [];
+    private bool _loading = true;
+    private bool _loadFailed;
+    private bool _editing;
+    private bool _saving;
+    private bool _failed;
+    private Guid? _editingId;
+    private Guid? _pendingDeleteId;
+    private string _brandModel = string.Empty;
+    private string _categoryKey = string.Empty;
+    private decimal? _price;
+    private int _durationMonths;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var productsTask = Products.LoadAsync();
+        var categoriesTask = CategoryCatalog.LoadAsync(includeArchived: true);
+        var settingsTask = Settings.LoadAsync();
+        await Task.WhenAll(productsTask, categoriesTask, settingsTask);
+        var products = await productsTask;
+        var categories = await categoriesTask;
+        var settings = await settingsTask;
+        if (products is not OperationResult<IReadOnlyList<Product>>.Succeeded productResult
+            || categories is not OperationResult<IReadOnlyList<Category>>.Succeeded categoryResult
+            || settings is not OperationResult<StoreSettings>.Succeeded settingsResult)
+        {
+            _loadFailed = true;
+            _message = products is OperationResult<IReadOnlyList<Product>>.Failed productFailure
+                ? productFailure.Error
+                : categories is OperationResult<IReadOnlyList<Category>>.Failed categoryFailure
+                    ? categoryFailure.Error
+                    : settings is OperationResult<StoreSettings>.Failed settingsFailure
+                        ? settingsFailure.Error
+                        : Localization["Products_LoadFailed"];
+        }
+        else
+        {
+            _products = productResult.Value.ToList();
+            _categories = categoryResult.Value.ToList();
+            _offeredDurations = settingsResult.Value.OfferedDurationsMonths.ToList();
+        }
+
+        _loading = false;
+    }
+
+    private void StartNew()
+    {
+        _editingId = null;
+        _brandModel = string.Empty;
+        _categoryKey = _categories.FirstOrDefault(category => !category.IsArchived)?.Key ?? string.Empty;
+        _price = null;
+        _durationMonths = _offeredDurations.FirstOrDefault(12);
+        _editing = true;
+        _pendingDeleteId = null;
+        SetMessage(null, false);
+    }
+
+    private void StartEdit(Product product)
+    {
+        _editingId = product.Id;
+        _brandModel = product.BrandModel;
+        _categoryKey = product.CategoryKey;
+        _price = product.PriceCents / 100m;
+        _durationMonths = product.DurationMonths;
+        _editing = true;
+        _pendingDeleteId = null;
+        SetMessage(null, false);
+    }
+
+    private void CancelEdit()
+    {
+        _editing = false;
+        _editingId = null;
+        SetMessage(null, false);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_saving) return;
+        var price = WarrantyPrice.FromDecimal(_price ?? 0);
+        if (price is not DomainResult<WarrantyPrice, WarrantyIssuanceError>.Succeeded validPrice)
+        {
+            SetMessage(Localization["Products_PriceInvalid"], true);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var result = await Products.SaveAsync(
+                _brandModel,
+                _categoryKey,
+                validPrice.Value.Cents,
+                _durationMonths,
+                _editingId);
+            if (result is OperationResult<Product>.Failed failed)
+            {
+                SetMessage(failed.Error, true);
+                return;
+            }
+
+            var product = ((OperationResult<Product>.Succeeded)result).Value;
+            var existingIndex = _products.FindIndex(item => item.Id == product.Id);
+            if (existingIndex < 0) _products.Add(product);
+            else _products[existingIndex] = product;
+            _products = _products.OrderBy(item => item.BrandModel, StringComparer.CurrentCultureIgnoreCase).ToList();
+            _editing = false;
+            _editingId = null;
+            SetMessage(Localization["Products_Saved"], false);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void RequestDelete(Product product)
+    {
+        _editing = false;
+        _editingId = null;
+        _pendingDeleteId = product.Id;
+        SetMessage(null, false);
+    }
+
+    private void CancelDelete() => _pendingDeleteId = null;
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_pendingDeleteId is not Guid id || _saving) return;
+        _saving = true;
+        try
+        {
+            var result = await Products.DeleteAsync(id);
+            if (result is OperationResult.Failed failed)
+            {
+                SetMessage(failed.Error, true);
+                return;
+            }
+
+            _products.RemoveAll(product => product.Id == id);
+            _pendingDeleteId = null;
+            SetMessage(Localization["Products_Deleted"], false);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private string CategoryName(string key) =>
+        _categories.FirstOrDefault(category => category.Key == key) is { } category
+            ? CategoryDisplay.DisplayName(category)
+            : key;
+
+    private void SetMessage(string? message, bool failed)
+    {
+        _message = message;
+        _failed = failed;
+    }
+}

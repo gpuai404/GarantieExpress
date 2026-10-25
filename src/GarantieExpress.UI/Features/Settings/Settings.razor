@@ -1,0 +1,51 @@
+@page "/instellingen"
+
+<PageTitle>@Localization["Settings_Title"] · GarantieExpress</PageTitle>
+<div class="page-heading"><div><p class="eyebrow">@Localization["Settings_Eyebrow"]</p><h1>@Localization["Settings_Heading"]</h1><p>@Localization["Settings_Intro"]</p></div></div>
+
+@if (_loading)
+{
+    <p class="notice">@Localization["Settings_Loading"]</p>
+}
+else if (_settings is not null)
+{
+    <div class="settings-form">
+        <EditForm Model="_settings" OnValidSubmit="SaveAsync" class="settings-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <fieldset disabled="@_saving">
+                <ShopSettingsSection
+                    Settings="@_settings"
+                    ServicesText="@_servicesText"
+                    LogoChanged="@OnLogoChangedAsync"
+                    RemoveLogo="@RemoveLogo"
+                    ServicesChanged="@OnServicesChanged" />
+
+                <WarrantySettingsSection
+                    Settings="@_settings"
+                    DurationText="@_durationText"
+                    DurationError="@_durationError"
+                    DurationChanged="@OnDurationsChanged" />
+
+                <ThemeSettingsSection
+                    Settings="@_settings"
+                    SelectedPreset="@_selectedPreset"
+                    CustomPresetName="@_customPresetName"
+                    ContrastChecks="@ContrastChecks"
+                    PresetChanged="@ApplyPreset"
+                    ResetPreset="@ResetPreset"
+                    SaveCustomPreset="@SaveCustomPreset"
+                    CustomPresetNameChanged="@OnCustomPresetNameChanged" />
+            </fieldset>
+
+            <div class="form-actions">
+                <button class="button primary" type="submit" disabled="@(_durationError is not null || _saving)">@(_saving ? Localization["Settings_Saving"] : Localization["Settings_Save"])</button>
+                @if (_message is not null) { <p role="status" class="save-message @(_saveFailed ? "error" : "success")">@_message</p> }
+            </div>
+        </EditForm>
+    </div>
+}
+else
+{
+    <p class="notice error">@(_message ?? Localization["Settings_LoadFailed"])</p>
+}

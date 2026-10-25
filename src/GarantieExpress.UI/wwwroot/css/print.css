@@ -1,0 +1,73 @@
+/* Measure at physical print scale, outside the clipped/scaled preview. */
+body.garantie-express-measuring-print .warranty-print-target {
+    position: fixed !important;
+    top: 0 !important;
+    left: -10000px !important;
+    width: auto !important;
+    overflow: visible !important;
+    visibility: hidden !important;
+}
+body.garantie-express-measuring-print .preview-viewport { padding: 0 !important; overflow: visible !important; }
+body.garantie-express-measuring-print .preview-canvas { width: auto !important; height: auto !important; transform: none !important; }
+body.garantie-express-measuring-print .preview-canvas .warranty-document { zoom: 1 !important; }
+
+@media print {
+    html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
+    body.garantie-express-printing * { visibility: hidden !important; }
+    body.garantie-express-printing .warranty-print-target,
+    body.garantie-express-printing .warranty-print-target * { visibility: visible !important; }
+    body.garantie-express-printing .warranty-print-target {
+        position: fixed !important;
+        inset: 0 auto auto 0 !important;
+        width: auto !important;
+        overflow: visible !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    body.garantie-express-printing .preview-toolbar { display: none !important; }
+    body.garantie-express-printing .preview-viewport { padding: 0 !important; overflow: visible !important; }
+    body.garantie-express-printing .preview-canvas { width: auto !important; height: auto !important; transform: none !important; }
+    body.garantie-express-printing .preview-canvas .warranty-document { zoom: 1 !important; }
+
+    body.garantie-express-ink-saver .warranty-document {
+        --secondary: var(--primary) !important;
+        --accent: var(--primary) !important;
+        --surface: #fff !important;
+        --paper: #fff !important;
+        --on-primary: var(--primary) !important;
+        --on-secondary: var(--primary) !important;
+        --on-accent: var(--primary) !important;
+        background-color: #fff !important;
+        background-image: none !important;
+    }
+    body.garantie-express-ink-saver .warranty-document .store-header,
+    body.garantie-express-ink-saver .warranty-document .certificate-title,
+    body.garantie-express-ink-saver .warranty-document .warranty-badge,
+    body.garantie-express-ink-saver .warranty-document .compact-store-header,
+    body.garantie-express-ink-saver .warranty-document .compact-title,
+    body.garantie-express-ink-saver .warranty-document .compact-badge,
+    body.garantie-express-ink-saver .warranty-document .receipt-store-header,
+    body.garantie-express-ink-saver .warranty-document .receipt-title,
+    body.garantie-express-ink-saver .warranty-document .classic-navy-store-header,
+    body.garantie-express-ink-saver .warranty-document .classic-navy-badge,
+    body.garantie-express-ink-saver .warranty-document .classic-navy-footer,
+    body.garantie-express-ink-saver .warranty-document footer {
+        box-sizing: border-box !important;
+        background: transparent !important;
+        border: .35mm solid var(--primary) !important;
+    }
+    body.garantie-express-ink-saver .warranty-document .registered-product,
+    body.garantie-express-ink-saver .warranty-document .purchase-box,
+    body.garantie-express-ink-saver .warranty-document .warranty-box,
+    body.garantie-express-ink-saver .warranty-document .compact-product-art,
+    body.garantie-express-ink-saver .warranty-document .purchase-facts,
+    body.garantie-express-ink-saver .warranty-document .warranty-facts,
+    body.garantie-express-ink-saver .warranty-document .receipt-product-art,
+    body.garantie-express-ink-saver .warranty-document .receipt-purchase div,
+    body.garantie-express-ink-saver .warranty-document .receipt-terms,
+    body.garantie-express-ink-saver .warranty-document .classic-navy-warranty {
+        background: transparent !important;
+    }
+}

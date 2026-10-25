@@ -1,0 +1,28 @@
+.document-preview-panel {
+    min-width: 0;
+    overflow: hidden;
+    background: #253642;
+    border-radius: .85rem;
+    box-shadow: 0 16px 45px rgba(23,43,56,.18);
+}
+
+.preview-toolbar {
+    min-height: 3.75rem;
+    padding: .7rem 1rem;
+    display: var(--preview-toolbar-display, flex);
+    align-items: var(--preview-toolbar-align, center);
+    justify-content: space-between;
+    gap: 1rem;
+    color: #dce8ee;
+    background: #172b38;
+}
+
+.preview-heading { display: grid; }
+.preview-heading span, .preview-number { font-size: .7rem; color: #a8bdc8; }
+.preview-heading strong { color: white; font-size: .85rem; }
+.preview-number { text-align: right; }
+.preview-actions { display: flex; align-items: end; flex-wrap: wrap; gap: 1rem; }
+
+@media (max-width: 800px) {
+    .preview-actions { display: grid; align-items: stretch; }
+}

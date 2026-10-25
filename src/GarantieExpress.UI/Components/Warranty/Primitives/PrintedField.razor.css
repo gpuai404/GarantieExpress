@@ -1,0 +1,3 @@
+.printed-field { min-height: 9mm; display: grid; grid-template-columns: 38mm minmax(0, 1fr); align-items: center; gap: 3mm; }
+.printed-field span { color: var(--muted-ink); font: 700 7.5pt Arial, sans-serif; }
+.printed-field strong { min-width: 0; padding: 2.2mm 3mm; overflow-wrap: anywhere; color: var(--ink); background: var(--surface); border: .25mm solid var(--line); border-radius: .8mm; font: 700 8.5pt Arial, sans-serif; }

@@ -1,0 +1,119 @@
+@page "/categorieen"
+@using GarantieExpress.UI.Components.Warranty.Primitives
+
+<PageTitle>@Localization["Categories_Title"] · GarantieExpress</PageTitle>
+<div class="categories-page">
+<div class="page-heading">
+    <div><p class="eyebrow">@Localization["Categories_Eyebrow"]</p><h1>@Localization["Categories_Title"]</h1><p>@Localization["Categories_Intro"]</p></div>
+    @if (!_loading && _settings is not null)
+    {
+        <button type="button" class="button primary" @onclick="StartNew">@Localization["Categories_New"]</button>
+    }
+</div>
+
+@if (_loading)
+{
+    <p class="notice">@Localization["Categories_Loading"]</p>
+}
+else if (_settings is null)
+{
+    <div class="notice error" role="alert">@(_message ?? Localization["Categories_LoadFailed"])</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="notice @(_failed ? "error" : "success")" role="status">@_message</div>
+    }
+
+    @if (_draft is not null)
+    {
+        <section class="category-editor form-card" style="@ThemePresentation.ToCssVariables(_settings.Theme)">
+            <div class="section-heading">
+                <span>01</span>
+                <div><h2>@(_draft.IsEditing ? Localization["Categories_Edit"] : Localization["Categories_Create"])</h2><p>@Localization["Categories_EditorIntro"]</p></div>
+            </div>
+
+            <div class="editor-grid">
+                <div class="editor-fields">
+                    <label>@Localization["Categories_Name"]<input @bind="_draft.Name" maxlength="80" /></label>
+                    <p class="field-hint">@Localization["Categories_Key"] <code>@KeyPreview</code></p>
+
+                    <label>@Localization["Categories_Identifier"]
+                        <select @bind="_draft.IdentifierMode">
+                            <option value="@CategoryIdentifierMode.SerialNumber">@Localization["Categories_IdentifierSerial"]</option>
+                            <option value="@CategoryIdentifierMode.Imei">@Localization["Categories_IdentifierImei"]</option>
+                            <option value="@CategoryIdentifierMode.SerialAndImei">@Localization["Categories_IdentifierBoth"]</option>
+                        </select>
+                    </label>
+
+                    <label>@Localization["Categories_DefaultDuration"]
+                        <select @bind="_draft.DefaultDurationMonths">
+                            @foreach (var duration in _settings.OfferedDurationsMonths)
+                            {
+                                <option value="@duration">@DurationFormatter.FormatDuration(duration)</option>
+                            }
+                        </select>
+                    </label>
+
+                    <label>@Localization["Categories_TermsOverride"]<textarea @bind="_draft.TermsOverride" rows="4"></textarea></label>
+                    <p class="field-hint">@Localization["Categories_TermsHint"]</p>
+                    <label class="checkbox-label"><input type="checkbox" @bind="_draft.ShowInBar" /> @Localization["Categories_ShowInBar"]</label>
+                    <label class="checkbox-label"><input type="checkbox" @bind="_useThemeColor" /> @Localization["Categories_UseThemeColor"]</label>
+                    <p class="field-hint">@Localization["Categories_ThemeColorHint"]</p>
+                </div>
+
+                <div class="variant-editor">
+                    <h3>@Localization["Categories_Illustrations"]</h3>
+                    <p class="field-hint">@Localization["Categories_SvgHint"]</p>
+                    @foreach (var variant in Enum.GetValues<IllustrationVariant>())
+                    {
+                        <div class="upload-row">
+                            <div class="upload-preview">
+                                @if (!string.IsNullOrWhiteSpace(PreviewSvg(variant)))
+                                {
+                                    <ProductIllustration SvgMarkup="@PreviewSvg(variant)" />
+                                }
+                                else
+                                {
+                                    <span>@Localization["Categories_NoIllustration"]</span>
+                                }
+                            </div>
+                            <div>
+                                <strong>@VariantLabel(variant)</strong>
+                                <InputFile OnChange="args => UploadSvgAsync(variant, args)" accept=".svg,image/svg+xml" />
+                                @if (_draft.Svgs.ContainsKey(variant))
+                                {
+                                    <button type="button" class="text-button" @onclick="() => RemoveSvg(variant)">@Localization["Categories_RemoveIllustration"]</button>
+                                }
+                                @if (_uploadErrors.TryGetValue(variant, out var uploadError))
+                                {
+                                    <p class="field-error">@uploadError</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <CategoryPreviewGrid
+                DraftName="@_draft.Name"
+                FallbackName="@Localization["Categories_PreviewName"]"
+                PreviewSvg="@PreviewSvg"
+                TemplateVariantLabel="@TemplateVariantLabel" />
+
+            <div class="editor-actions">
+                <button type="button" class="button primary" disabled="@_saving" @onclick="SaveAsync">@(_saving ? Localization["Categories_Saving"] : Localization["Categories_Save"])</button>
+                <button type="button" class="button secondary" disabled="@_saving" @onclick="CancelEdit">@Localization["Categories_Cancel"]</button>
+            </div>
+        </section>
+    }
+
+    <CategoryCatalogGrid
+        Categories="@_categories"
+        EditRequested="@StartEdit"
+        DuplicateRequested="@StartDuplicate"
+        ToggleBar="@ToggleBarAsync"
+        SetArchived="@SetArchivedAsync" />
+}
+</div>

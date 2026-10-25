@@ -1,0 +1,151 @@
+<label for="issue-brand-model">@Localization["Issue_BrandModel"]</label>
+<div class="product-combobox">
+    <input id="issue-brand-model"
+           value="@Value"
+           @oninput="OnInputAsync"
+           @onfocus="OnFocused"
+           @onblur="OnBlurred"
+           @onkeydown="OnKeyDownAsync"
+           maxlength="180"
+           autocomplete="off"
+           placeholder="@Localization["Issue_BrandModelPlaceholder"]"
+           role="combobox"
+           aria-autocomplete="list"
+           aria-expanded="@(_suggestionsOpen ? "true" : "false")"
+           aria-controls="issue-product-suggestions"
+           aria-activedescendant="@ActiveDescendant" />
+    @if (_suggestionsOpen)
+    {
+        <div class="product-suggestions">
+            <ul id="issue-product-suggestions" role="listbox" aria-label="@Localization["Issue_ProductSuggestions"]">
+                @if (MatchingProducts.Count > 0)
+                {
+                    @for (var index = 0; index < MatchingProducts.Count; index++)
+                    {
+                        var product = MatchingProducts[index];
+                        var optionIndex = index;
+                        <li id="@OptionId(optionIndex)"
+                            role="option"
+                            aria-selected="@(optionIndex == _activeSuggestionIndex ? "true" : "false")"
+                            class="@(optionIndex == _activeSuggestionIndex ? "active" : null)"
+                            @onmousedown:preventDefault="true"
+                            @onclick="() => SelectAsync(product, fromKeyboard: false)">
+                            <strong>@product.BrandModel</strong>
+                            <span>@ProductSummary(product)</span>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="product-suggestions-empty" role="presentation"><span role="status">@Localization["Issue_NoProductSuggestions"]</span></li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+@if (SuggestionsUnavailable)
+{
+    <p class="field-hint product-warning" role="status">@Localization["Issue_ProductSuggestionsUnavailable"]</p>
+}
+
+@code {
+    [Inject] private ILocalizationService Localization { get; set; } = null!;
+    [Inject] private CategoryDisplayResolver CategoryDisplay { get; set; } = null!;
+    [Inject] private WarrantyDurationFormatter DurationFormatter { get; set; } = null!;
+
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<Product> Products { get; set; } = [];
+    [Parameter] public IReadOnlyList<Category> Categories { get; set; } = [];
+    [Parameter] public bool SuggestionsUnavailable { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Product> ProductSelected { get; set; }
+    [Parameter] public EventCallback<Product> ProductSelectedByKeyboard { get; set; }
+
+    private bool _suggestionsOpen;
+    private int _activeSuggestionIndex = -1;
+
+    private IReadOnlyList<Product> MatchingProducts
+    {
+        get
+        {
+            var searchKey = Product.NormalizeKey(Value);
+            if (string.IsNullOrEmpty(searchKey)) return [];
+
+            return Products
+                .Where(product => product.BrandModelKey.Contains(searchKey, StringComparison.Ordinal))
+                .OrderByDescending(product => product.BrandModelKey.StartsWith(searchKey, StringComparison.Ordinal))
+                .ThenBy(
+                    product => product.BrandModel,
+                    StringComparer.Create(
+                        System.Globalization.CultureInfo.GetCultureInfo(Localization.CurrentLanguage),
+                        ignoreCase: true))
+                .Take(8)
+                .ToList();
+        }
+    }
+
+    private string? ActiveDescendant =>
+        _suggestionsOpen && _activeSuggestionIndex >= 0 && _activeSuggestionIndex < MatchingProducts.Count
+            ? OptionId(_activeSuggestionIndex)
+            : null;
+
+    private async Task OnInputAsync(ChangeEventArgs args)
+    {
+        var value = args.Value?.ToString() ?? string.Empty;
+        _activeSuggestionIndex = -1;
+        _suggestionsOpen = !string.IsNullOrWhiteSpace(value) && Products.Count > 0;
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    private void OnFocused() =>
+        _suggestionsOpen = !string.IsNullOrWhiteSpace(Value) && Products.Count > 0;
+
+    private void OnBlurred()
+    {
+        _suggestionsOpen = false;
+        _activeSuggestionIndex = -1;
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs args)
+    {
+        var matches = MatchingProducts;
+        switch (args.Key)
+        {
+            case "ArrowDown" when matches.Count > 0:
+                _suggestionsOpen = true;
+                _activeSuggestionIndex = (_activeSuggestionIndex + 1) % matches.Count;
+                break;
+            case "ArrowUp" when matches.Count > 0:
+                _suggestionsOpen = true;
+                _activeSuggestionIndex = _activeSuggestionIndex <= 0
+                    ? matches.Count - 1
+                    : _activeSuggestionIndex - 1;
+                break;
+            case "Enter" when _suggestionsOpen && _activeSuggestionIndex >= 0 && _activeSuggestionIndex < matches.Count:
+                await SelectAsync(matches[_activeSuggestionIndex], fromKeyboard: true);
+                break;
+            case "Escape":
+                _suggestionsOpen = false;
+                _activeSuggestionIndex = -1;
+                break;
+        }
+    }
+
+    private async Task SelectAsync(Product product, bool fromKeyboard)
+    {
+        _suggestionsOpen = false;
+        _activeSuggestionIndex = -1;
+        if (fromKeyboard)
+            await ProductSelectedByKeyboard.InvokeAsync(product);
+        else
+            await ProductSelected.InvokeAsync(product);
+    }
+
+    private string OptionId(int index) => $"issue-product-suggestion-{index}";
+
+    private string ProductSummary(Product product)
+    {
+        var category = Categories.First(category => category.Key == product.CategoryKey);
+        return $"{CategoryDisplay.DisplayName(category)} · € {(product.PriceCents / 100m):0.00} · {DurationFormatter.FormatDuration(product.DurationMonths)}";
+    }
+}

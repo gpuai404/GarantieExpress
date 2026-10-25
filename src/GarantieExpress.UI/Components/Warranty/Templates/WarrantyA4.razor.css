@@ -1,0 +1,72 @@
+.warranty-a4 {
+    width: 210mm;
+    height: 297mm;
+    padding: 7mm;
+    display: grid;
+    grid-template-rows: 22mm 39mm 106mm 36mm 28mm 22mm 18mm;
+    gap: 2mm;
+    overflow: hidden;
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image: repeating-linear-gradient(90deg, transparent 0 6.5mm, color-mix(in srgb, var(--line) 13%, transparent) 6.5mm 6.7mm);
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.store-header { padding: 0 6mm; display: flex; align-items: center; justify-content: space-between; gap: 8mm; color: var(--on-primary); background: var(--primary); }
+.store-identity { min-width: 0; display: grid; gap: 1.2mm; }
+.store-identity img { display: block; max-width: 55mm; max-height: 11mm; object-fit: contain; object-position: left center; }
+.store-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17pt; letter-spacing: .05em; text-transform: uppercase; }
+.store-identity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 6.3pt; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+.store-slogan { max-width: 45mm; text-align: right; font-size: 8pt; font-weight: 700; line-height: 1.25; }
+
+
+.certificate-title { padding: 3.5mm 8mm; display: flex; align-items: center; justify-content: space-between; color: var(--on-secondary); background: var(--secondary); }
+.certificate-title > div:first-child { min-width: 0; }
+.certificate-title span { display: block; font-size: 5.8pt; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.certificate-title h2 { margin: 1mm 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--on-secondary); font: 800 30pt/1 Georgia, serif; letter-spacing: -.025em; text-transform: uppercase; }
+.certificate-title em { display: block; margin-top: 1mm; font: italic 7.5pt Georgia, serif; opacity: .86; }
+.warranty-badge { width: 37mm; height: 37mm; margin-right: 1mm; display: grid; flex: 0 0 auto; place-items: center; color: var(--on-accent); background: var(--accent); border: .5mm solid color-mix(in srgb, var(--line) 55%, transparent); border-radius: 50%; transform: translateY(1mm); }
+.warranty-badge span { max-width: 28mm; text-align: center; font-size: 9pt; line-height: 1.15; letter-spacing: .06em; }
+
+.product-area { display: grid; grid-template-columns: 1.55fr .95fr; gap: 4mm; min-height: 0; }
+.bordered-panel { border: .35mm solid var(--line); border-radius: 6mm; }
+.product-data { padding: 6mm; min-width: 0; }
+.panel-heading { display: flex; align-items: center; gap: 3mm; }
+.panel-heading > span { width: 6mm; height: 6mm; display: inline-grid; flex: 0 0 auto; place-items: center; color: var(--muted-ink); background: var(--paper); border: .3mm solid var(--line); border-radius: 50%; font-size: 6.2pt; }
+.panel-heading h3 { margin: 0; color: var(--ink); font-size: 11pt; letter-spacing: .08em; text-transform: uppercase; }
+.product-data ::deep .printed-field:first-of-type { margin-top: 4mm; }
+.identifier-note { margin: 3mm 0 0; color: var(--muted-ink); font: 6.2pt Georgia, serif; }
+.identifier-note::first-letter { color: var(--secondary); }
+
+.registered-product { padding: 5mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 0; text-align: center; background: color-mix(in srgb, var(--surface) 78%, var(--paper)); }
+.aside-label { color: var(--muted-ink); font-size: 6.5pt; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.registered-product ::deep .product-illustration { max-height: 50mm; }
+.registered-product strong { max-width: 100%; overflow-wrap: anywhere; color: var(--ink); font-size: 9pt; }
+.registered-product small { color: var(--muted-ink); font-size: 6.5pt; }
+.registered-product p { width: 34mm; margin: 0; padding-top: 3mm; color: var(--muted-ink); border-top: .25mm solid var(--line); font: italic 5.8pt Georgia, serif; }
+
+.purchase-warranty-row { display: grid; grid-template-columns: .95fr 1.05fr; gap: 4mm; }
+.purchase-box, .warranty-box { padding: 4mm; min-width: 0; background: var(--surface); border-radius: 5mm; }
+.purchase-values { margin-top: 3mm; display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+.purchase-values div { padding-bottom: 2mm; display: grid; gap: 1.5mm; border-bottom: .5mm solid var(--line); }
+.purchase-values small, .warranty-box p span { color: var(--muted-ink); font-size: 6.3pt; font-weight: 800; text-transform: uppercase; }
+.purchase-values strong { color: var(--ink); font-size: 10pt; }
+.warranty-box ::deep .duration-options { margin: 2.8mm 0 1.8mm 9mm; }
+.coverage-dates { display: grid; gap: .7mm; }
+.warranty-box p { margin: 0 0 0 9mm; display: flex; align-items: baseline; justify-content: space-between; gap: 2mm; }
+.warranty-box p strong { color: var(--secondary); font-size: 9pt; }
+
+.terms-box { padding: 4mm 6mm; border-radius: 4mm; }
+.terms-box p { margin: 2.5mm 0 0 9mm; color: var(--ink); font: 8pt/1.45 Georgia, serif; }
+
+.signatures { padding: 0 3mm; display: grid; grid-template-columns: 1fr 1.2fr .65fr; gap: 5mm; align-items: end; }
+.signatures ::deep .signature-line:last-child { text-align: right; }
+
+footer { padding: 0 6mm; display: flex; align-items: center; justify-content: space-between; gap: 5mm; color: var(--on-primary); background: var(--primary); }
+footer div { display: grid; gap: 1mm; }
+footer strong { font-size: 6.5pt; }
+footer span { max-width: 115mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 5.5pt; opacity: .75; }
+footer em { color: var(--accent); font: italic 6.3pt Georgia, serif; text-align: right; }

@@ -1,0 +1,79 @@
+@using GarantieExpress.UI.Layout
+@using GarantieExpress.UI.Localization
+@using GarantieExpress.UI.Pages
+@using GarantieExpress.Host.Updates
+@inject LocalizationService Localization
+@inject ApplicationUpdateService Updates
+@implements IDisposable
+
+@if (_initialized)
+{
+    @if (Updates.Status is
+        { IsUpdateAvailable: true, IsUpdateRequired: true, RequiresMajorUpgrade: true })
+    {
+        <MajorVersionError Refreshing="_refreshing" OnRefresh="RefreshUpdatesAsync" />
+    }
+    else if (Updates.Status is { IsUpdateAvailable: true, IsUpdateRequired: true } requiredUpdate)
+    {
+        <CriticalUpdate Status="requiredUpdate" />
+    }
+    else
+    {
+        @if (Updates.Status is { IsUpdateAvailable: true } update)
+        {
+            <aside class="update-notice" role="status">
+                <span>@Localization.Format("Update_Available", update.LatestVersion!)</span>
+                <a href="@update.DownloadUri" target="_blank" rel="noopener noreferrer">
+                    @Localization["Update_Download"]
+                </a>
+            </aside>
+        }
+        <Router AppAssembly="@typeof(Program).Assembly"
+                AdditionalAssemblies="new[] { typeof(Home).Assembly }"
+                NotFoundPage="typeof(NotFound)">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+        </Router>
+    }
+}
+else
+{
+    <div class="application-loading" role="status" aria-live="polite">Loading…</div>
+}
+
+@code {
+    private bool _initialized;
+    private bool _refreshing;
+
+    protected override void OnInitialized() => Updates.StatusChanged += OnUpdateStatusChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Localization.InitializeAsync();
+        _initialized = true;
+        StateHasChanged();
+    }
+
+    private async Task RefreshUpdatesAsync()
+    {
+        if (_refreshing) return;
+
+        _refreshing = true;
+        try
+        {
+            await Updates.CheckAsync();
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private void OnUpdateStatusChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Updates.StatusChanged -= OnUpdateStatusChanged;
+}

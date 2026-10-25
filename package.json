@@ -1,0 +1,16 @@
+{
+  "name": "garantie-express",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:js",
+    "test:js": "node --test tests/js/*.test.mjs",
+    "test:e2e": "node tests/e2e/prepare.mjs && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

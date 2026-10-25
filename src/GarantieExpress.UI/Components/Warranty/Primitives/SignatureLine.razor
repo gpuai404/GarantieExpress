@@ -1,0 +1,9 @@
+<div class="signature-line">
+    <span>@Label</span>
+    @if (!string.IsNullOrWhiteSpace(Hint)) { <strong>@Hint</strong> }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required string Label { get; set; }
+    [Parameter] public string? Hint { get; set; }
+}

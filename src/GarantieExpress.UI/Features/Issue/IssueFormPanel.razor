@@ -1,0 +1,235 @@
+<aside class="issue-form-panel">
+    <EditForm EditContext="EditContext" FormName="issue-warranty" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <fieldset disabled="@Busy">
+
+        <div class="form-section-heading"><span>01</span><div><h2>@Localization["Issue_ProductSection"]</h2><p>@Localization["Issue_ProductSectionText"]</p></div></div>
+
+        <label for="issue-service-type">@Localization["Issue_ServiceType"]
+            <select id="issue-service-type" value="@Form.ServiceType" @onchange="OnServiceTypeChanged">
+                <option value="@WarrantyServiceType.Sale">@Localization["Template_ServiceSale"]</option>
+                <option value="@WarrantyServiceType.Repair">@Localization["Template_ServiceRepair"]</option>
+            </select>
+        </label>
+        <ValidationMessage For="@(() => Form.ServiceType)" />
+
+        @if (Form.ServiceType == WarrantyServiceType.Repair)
+        {
+            <label for="issue-repair-note">@Localization["Issue_RepairNote"]
+                <textarea id="issue-repair-note" value="@Form.RepairNote" @oninput="OnRepairNoteChanged" rows="3" maxlength="@WarrantyRules.MaximumRepairNoteLength" placeholder="@Localization["Issue_RepairNotePlaceholder"]"></textarea>
+            </label>
+            <ValidationMessage For="@(() => Form.RepairNote)" />
+        }
+
+        <label for="issue-category">@Localization["Issue_Category"]
+            <select id="issue-category" value="@Form.CategoryKey" @onchange="OnCategoryChanged">
+                @foreach (var category in Categories)
+                {
+                    <option value="@category.Key">@CategoryName(category)</option>
+                }
+            </select>
+        </label>
+        <ValidationMessage For="@(() => Form.CategoryKey)" />
+
+        <ProductPresetCombobox
+            Value="@Form.BrandModel"
+            Products="@Products"
+            Categories="@Categories"
+            SuggestionsUnavailable="@ProductSuggestionsUnavailable"
+            ValueChanged="@OnBrandModelChanged"
+            ProductSelected="@ProductSelected"
+            ProductSelectedByKeyboard="@OnProductSelectedByKeyboardAsync" />
+        <ValidationMessage For="@(() => Form.BrandModel)" />
+
+        <label for="issue-identifier">@IdentifierLabel
+            <input id="issue-identifier" value="@Form.Serial" @oninput="OnSerialChanged" maxlength="100" autocomplete="off" placeholder="@Localization["Issue_SerialPlaceholder"]" />
+        </label>
+        <ValidationMessage For="@(() => Form.Serial)" />
+
+        <div class="form-grid two-columns">
+            <div>
+                <label for="issue-purchase-date">@Localization["Issue_PurchaseDate"]
+                    <input id="issue-purchase-date" type="date" value="@Form.PurchaseDate.ToString("yyyy-MM-dd")" max="@Today.ToString("yyyy-MM-dd")" @onchange="OnPurchaseDateChanged" />
+                </label>
+                <ValidationMessage For="@(() => Form.PurchaseDate)" />
+            </div>
+            <div>
+                <label for="issue-price">@Localization["Issue_Price"]
+                    <span class="price-input"><span>€</span><input id="issue-price" type="number" min="0.01" max="99999999" step="0.01" @bind="Form.Price" @bind:after="OnPriceChanged" inputmode="decimal" /></span>
+                </label>
+                <ValidationMessage For="@(() => Form.Price)" />
+            </div>
+        </div>
+
+        <label for="issue-valid-from">@Localization["Issue_ValidFrom"]
+            <input id="issue-valid-from" type="date" value="@Form.ValidFrom?.ToString("yyyy-MM-dd")" @onchange="OnValidFromChanged" />
+        </label>
+        <ValidationMessage For="@(() => Form.ValidFrom)" />
+
+        <label for="issue-duration">@Localization["Issue_Duration"]
+            <select id="issue-duration" value="@Form.DurationMonths" @onchange="OnDurationChanged">
+                @foreach (var duration in Settings.OfferedDurationsMonths)
+                {
+                    <option value="@duration">@FormatDuration(duration)</option>
+                }
+            </select>
+        </label>
+        <ValidationMessage For="@(() => Form.DurationMonths)" />
+
+        <div class="form-grid two-columns">
+            <label for="issue-template">@Localization["Issue_Template"]
+                <select id="issue-template" value="@CurrentTemplate.DesignKey" disabled="@(IsIssued)" @onchange="OnDesignChanged">
+                    @foreach (var design in TemplateRegistry.Designs)
+                    {
+                        <option value="@design.Key">@Localization[design.NameResourceKey]</option>
+                    }
+                </select>
+            </label>
+            <label for="issue-page-size">@Localization["Issue_PageSize"]
+                <select id="issue-page-size" value="@CurrentTemplate.PageSizeKey" disabled="@(IsIssued)" @onchange="OnPageSizeChanged">
+                    @foreach (var pageSize in TemplateRegistry.PageSizes)
+                    {
+                        <option value="@pageSize.Key">@Localization[pageSize.NameResourceKey] · @pageSize.WidthMm × @pageSize.HeightMm mm</option>
+                    }
+                </select>
+            </label>
+        </div>
+        <p class="field-hint">@Localization["Issue_TemplateHint"]</p>
+
+        <div class="issue-form-actions">
+            <button type="button" class="button secondary" @onclick="ClearDraftClicked">@Localization["Issue_Clear"]</button>
+            <button type="submit" class="button">@(IsIssued ? Localization["Issue_PrintAgain"] : Localization["Issue_SavePrint"])</button>
+            <label class="ink-saver-option"><input id="issue-ink-saver" type="checkbox" checked="@InkSaver" @onchange="OnInkSaverChanged" /> @Localization["Issue_InkSaver"]</label>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(IssueStatus))
+        {
+            <div class="notice @(IssueFailed ? "error" : null)" role="status">@IssueStatus</div>
+        }
+        </fieldset>
+    </EditForm>
+</aside>
+
+@code {
+    [Inject] private ILocalizationService Localization { get; set; } = null!;
+    [Inject] private CategoryDisplayResolver CategoryDisplay { get; set; } = null!;
+    [Inject] private WarrantyDurationFormatter DurationFormatter { get; set; } = null!;
+    [Inject] private TemplateRegistry TemplateRegistry { get; set; } = null!;
+
+    [Parameter] public StoreSettings Settings { get; set; } = null!;
+    [Parameter] public IReadOnlyList<Category> Categories { get; set; } = [];
+    [Parameter] public IReadOnlyList<Product> Products { get; set; } = [];
+    [Parameter] public bool ProductSuggestionsUnavailable { get; set; }
+    [Parameter] public IssueWarrantyForm Form { get; set; } = new();
+    [Parameter] public EditContext? EditContext { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public bool IsIssued { get; set; }
+    [Parameter] public bool InkSaver { get; set; }
+    [Parameter] public string? IssueStatus { get; set; }
+    [Parameter] public bool IssueFailed { get; set; }
+    [Parameter] public DateOnly Today { get; set; }
+    [Parameter] public EventCallback<string> FormChanged { get; set; }
+    [Parameter] public EventCallback<Product> ProductSelected { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> ClearDraftClicked { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback<bool> InkSaverChanged { get; set; }
+
+    private bool _suppressNextSubmit;
+
+    private Task OnInkSaverChanged(ChangeEventArgs args) =>
+        args.Value is bool value
+            ? InkSaverChanged.InvokeAsync(value)
+            : Task.CompletedTask;
+
+    private async Task OnServiceTypeChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse<WarrantyServiceType>(args.Value?.ToString(), out var value) && Enum.IsDefined(value))
+            Form.ServiceType = value;
+        await FormChanged.InvokeAsync(nameof(Form.ServiceType));
+    }
+
+    private async Task OnCategoryChanged(ChangeEventArgs args)
+    {
+        Form.CategoryKey = args.Value?.ToString() ?? Categories[0].Key;
+        var category = CurrentCategory;
+        Form.DurationMonths = category.DefaultDurationsMonths.FirstOrDefault(
+            Settings.OfferedDurationsMonths.Contains,
+            Settings.OfferedDurationsMonths.FirstOrDefault(12));
+        await FormChanged.InvokeAsync(nameof(Form.CategoryKey));
+        await FormChanged.InvokeAsync(nameof(Form.DurationMonths));
+    }
+
+    private async Task OnBrandModelChanged(string value)
+    {
+        Form.BrandModel = value;
+        await FormChanged.InvokeAsync(nameof(Form.BrandModel));
+    }
+
+    private async Task OnProductSelectedByKeyboardAsync(Product product)
+    {
+        _suppressNextSubmit = true;
+        await ProductSelected.InvokeAsync(product);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (_suppressNextSubmit)
+        {
+            _suppressNextSubmit = false;
+            return;
+        }
+
+        await OnValidSubmit.InvokeAsync();
+    }
+
+    private Task OnRepairNoteChanged(ChangeEventArgs args) => ChangeText(nameof(Form.RepairNote), args, value => Form.RepairNote = value);
+    private Task OnSerialChanged(ChangeEventArgs args) => ChangeText(nameof(Form.Serial), args, value => Form.Serial = value);
+
+    private async Task OnPurchaseDateChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", out var value)) Form.PurchaseDate = value;
+        await FormChanged.InvokeAsync(nameof(Form.PurchaseDate));
+    }
+
+    private async Task OnValidFromChanged(ChangeEventArgs args)
+    {
+        Form.ValidFrom = DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", out var value) ? value : null;
+        await FormChanged.InvokeAsync(nameof(Form.ValidFrom));
+    }
+
+    private Task OnPriceChanged() => FormChanged.InvokeAsync(nameof(Form.Price));
+
+    private async Task OnDurationChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var value)) Form.DurationMonths = value;
+        await FormChanged.InvokeAsync(nameof(Form.DurationMonths));
+    }
+
+    private async Task OnDesignChanged(ChangeEventArgs args)
+    {
+        Form.TemplateKey = TemplateRegistry.WithDesign(
+            Form.TemplateKey,
+            args.Value?.ToString()).Key;
+        await FormChanged.InvokeAsync(nameof(Form.TemplateKey));
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs args)
+    {
+        Form.TemplateKey = TemplateRegistry.WithPageSize(
+            Form.TemplateKey,
+            args.Value?.ToString()).Key;
+        await FormChanged.InvokeAsync(nameof(Form.TemplateKey));
+    }
+
+    private async Task ChangeText(string propertyName, ChangeEventArgs args, Action<string> assign)
+    {
+        assign(args.Value?.ToString() ?? string.Empty);
+        await FormChanged.InvokeAsync(propertyName);
+    }
+
+    private Category CurrentCategory => Categories.FirstOrDefault(category => category.Key == Form.CategoryKey) ?? Categories[0];
+    private WarrantyTemplate CurrentTemplate => TemplateRegistry.Get(Form.TemplateKey);
+    private string IdentifierLabel => CategoryDisplay.FieldLabel(CurrentCategory, CategoryDisplay.PrimaryIdentifier(CurrentCategory));
+    private string CategoryName(Category category) => CategoryDisplay.DisplayName(category);
+    private string FormatDuration(int months) => DurationFormatter.FormatDuration(months);
+}

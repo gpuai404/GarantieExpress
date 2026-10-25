@@ -1,0 +1,21 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{cs,razor,cshtml}]
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,xml,props,targets,csproj,wixproj}]
+indent_style = space
+indent_size = 2
+
+[*.{md,js,mjs,css,sh,ps1}]
+indent_style = space
+indent_size = 2
+
+[*.slnx]
+indent_style = space
+indent_size = 2

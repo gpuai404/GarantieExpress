@@ -1,0 +1,45 @@
+@using GarantieExpress.Host.Updates
+@inject ILocalizationService Localization
+@inject ILocalApplicationLifetime ApplicationLifetime
+
+<main class="critical-update" aria-labelledby="critical-update-title">
+    <section class="critical-update-card" role="alert">
+        <p class="eyebrow">@Localization["Update_Required_Eyebrow"]</p>
+        <h1 id="critical-update-title">@Localization["Update_Required_Title"]</h1>
+        <p class="critical-update-intro">
+            @Localization.Format("Update_Required_Text", Status.LatestVersion!)
+        </p>
+        @if (Status.Message is not null)
+        {
+            <p>@Status.Message</p>
+        }
+        <dl>
+            <div>
+                <dt>@Localization["Update_CurrentVersion"]</dt>
+                <dd>@Status.InstalledVersion</dd>
+            </div>
+            <div>
+                <dt>@Localization["Update_MinimumSupportedVersion"]</dt>
+                <dd>@Status.MinimumSupportedVersion</dd>
+            </div>
+            <div>
+                <dt>@Localization["Update_LatestVersion"]</dt>
+                <dd>@Status.LatestVersion</dd>
+            </div>
+        </dl>
+        <div class="critical-update-actions">
+            <a class="button primary"
+               href="@Status.DownloadUri"
+               target="_blank"
+               rel="noopener noreferrer">@Localization["Update_Download"]</a>
+            <button type="button" class="button secondary" @onclick="ApplicationLifetime.RequestShutdown">
+                @Localization["Application_Quit"]
+            </button>
+        </div>
+    </section>
+</main>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ApplicationUpdateStatus Status { get; set; }
+}

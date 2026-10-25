@@ -1,0 +1,19 @@
+@using GarantieExpress.UI.Components.Warranty.Primitives
+
+<div class="template-variant-preview">
+    @foreach (var variant in Enum.GetValues<IllustrationVariant>())
+    {
+        <div class="variant-sheet @variant.ToString().ToLowerInvariant()">
+            <span>@TemplateVariantLabel(variant)</span>
+            <ProductIllustration SvgMarkup="@PreviewSvg(variant)" />
+            <strong>@(DraftName.Trim().Length == 0 ? FallbackName : DraftName.Trim())</strong>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string DraftName { get; set; } = string.Empty;
+    [Parameter] public string FallbackName { get; set; } = string.Empty;
+    [Parameter] public Func<IllustrationVariant, string> PreviewSvg { get; set; } = _ => string.Empty;
+    [Parameter] public Func<IllustrationVariant, string> TemplateVariantLabel { get; set; } = _ => string.Empty;
+}

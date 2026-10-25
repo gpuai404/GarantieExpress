@@ -1,0 +1,74 @@
+@inject ILocalizationService Localization
+
+<section class="form-card theme-card">
+    <div class="section-heading"><span>03</span><div><h2>@Localization["Theme_Title"]</h2><p>@Localization["Theme_Intro"]</p></div></div>
+    <div class="theme-layout">
+        <div class="theme-controls">
+            <div class="preset-toolbar">
+                <label>@Localization["Theme_Preset"]
+                    <select value="@SelectedPreset" @onchange="PresetChanged">
+                        <optgroup label="@Localization["Theme_BuiltInPresets"]">
+                            @foreach (var preset in ThemePresets.All)
+                            {
+                                <option value="built:@preset.Key">@Localization[preset.NameKey]</option>
+                            }
+                        </optgroup>
+                        @if (Settings.SavedThemePresets.Count > 0)
+                        {
+                            <optgroup label="@Localization["Theme_CustomPresets"]">
+                                @for (var index = 0; index < Settings.SavedThemePresets.Count; index++)
+                                {
+                                    <option value="custom:@index">@Settings.SavedThemePresets[index].Name</option>
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                </label>
+                <button type="button" class="button secondary" @onclick="ResetPreset">@Localization["Theme_Reset"]</button>
+            </div>
+
+            <div class="color-grid">
+                <label>@Localization["Theme_Primary"]<span class="color-control"><input type="color" @bind="Settings.Theme.Primary" @bind:event="oninput" /><code>@Settings.Theme.Primary</code></span></label>
+                <label>@Localization["Theme_Secondary"]<span class="color-control"><input type="color" @bind="Settings.Theme.Secondary" @bind:event="oninput" /><code>@Settings.Theme.Secondary</code></span></label>
+                <label>@Localization["Theme_Accent"]<span class="color-control"><input type="color" @bind="Settings.Theme.Accent" @bind:event="oninput" /><code>@Settings.Theme.Accent</code></span></label>
+                <label>@Localization["Theme_Surface"]<span class="color-control"><input type="color" @bind="Settings.Theme.Surface" @bind:event="oninput" /><code>@Settings.Theme.Surface</code></span></label>
+                <label>@Localization["Theme_Ink"]<span class="color-control"><input type="color" @bind="Settings.Theme.Ink" @bind:event="oninput" /><code>@Settings.Theme.Ink</code></span></label>
+                <label>@Localization["Theme_MutedInk"]<span class="color-control"><input type="color" @bind="Settings.Theme.MutedInk" @bind:event="oninput" /><code>@Settings.Theme.MutedInk</code></span></label>
+                <label>@Localization["Theme_Line"]<span class="color-control"><input type="color" @bind="Settings.Theme.Line" @bind:event="oninput" /><code>@Settings.Theme.Line</code></span></label>
+                <label>@Localization["Theme_Paper"]<span class="color-control"><input type="color" @bind="Settings.Theme.Paper" @bind:event="oninput" /><code>@Settings.Theme.Paper</code></span></label>
+            </div>
+
+            <div class="contrast-panel">
+                <h3>@Localization["Theme_ContrastTitle"]</h3>
+                @foreach (var check in ContrastChecks)
+                {
+                    <div class="contrast-result @(check.Passes ? "pass" : "fail")">
+                        <span>@Localization[check.PairKey]</span>
+                        <strong>@check.Ratio.ToString("0.00") : 1</strong>
+                        <small>@(check.Passes ? Localization["Theme_ContrastPass"] : Localization.Format("Theme_ContrastFail", check.Minimum))</small>
+                    </div>
+                }
+            </div>
+
+            <div class="custom-preset">
+                <label>@Localization["Theme_CustomName"]<input value="@CustomPresetName" @oninput="CustomPresetNameChanged" maxlength="40" /></label>
+                <button type="button" class="button secondary" @onclick="SaveCustomPreset">@Localization["Theme_SavePreset"]</button>
+            </div>
+        </div>
+        <div class="theme-preview-wrap">
+            <p class="field-hint">@Localization["Theme_LivePreview"]</p>
+            <ThemePreview Settings="Settings" />
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public SettingsFormModel Settings { get; set; } = null!;
+    [Parameter] public string SelectedPreset { get; set; } = string.Empty;
+    [Parameter] public string CustomPresetName { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<ContrastCheck> ContrastChecks { get; set; } = [];
+    [Parameter] public EventCallback<ChangeEventArgs> PresetChanged { get; set; }
+    [Parameter] public EventCallback ResetPreset { get; set; }
+    [Parameter] public EventCallback SaveCustomPreset { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> CustomPresetNameChanged { get; set; }
+}

@@ -1,0 +1,51 @@
+@page "/uitgeven"
+
+<PageTitle>@Localization["Issue_Title"] · GarantieExpress</PageTitle>
+<div class="issue-page">
+<div class="page-heading issue-heading">
+    <div><p class="eyebrow">@Localization["Issue_Eyebrow"]</p><h1>@Localization["Issue_Heading"]</h1><p>@Localization["Issue_WorkspaceIntro"]</p></div>
+    @if (Workflow.Initialized)
+    {
+        <span class="draft-status @(Workflow.DraftFailed ? "failed" : null)" role="status">@Workflow.DraftStatus</span>
+    }
+</div>
+
+@if (Workflow.Loading)
+{
+    <p class="notice">@Localization["Issue_Loading"]</p>
+}
+else if (Workflow.Settings is null || Workflow.Categories.Count == 0 || Workflow.EditContext is null)
+{
+    <div class="notice error" role="alert">@(Workflow.LoadError ?? Localization["Issue_LoadFailed"])</div>
+}
+else
+{
+    <div class="issue-workspace">
+        <IssueFormPanel
+            Settings="Workflow.Settings"
+            Categories="@Workflow.Categories"
+            Products="@Workflow.AvailableProducts"
+            ProductSuggestionsUnavailable="@Workflow.ProductSuggestionsUnavailable"
+            Form="@Workflow.Form"
+            EditContext="@Workflow.EditContext"
+            Busy="@Workflow.Busy"
+            IsIssued="@(Workflow.IssuedWarranty is not null)"
+            InkSaver="@Workflow.InkSaver"
+            IssueStatus="@Workflow.IssueStatus"
+            IssueFailed="@Workflow.IssueFailed"
+            Today="@Workflow.Today"
+            FormChanged="@Workflow.NotifyChanged"
+            ProductSelected="@Workflow.ApplyProduct"
+            ClearDraftClicked="@Workflow.ClearDraftAsync"
+            OnValidSubmit="@Workflow.IssueAndPrintAsync"
+            InkSaverChanged="@Workflow.SetInkSaver" />
+
+        <WarrantyPreviewPanel
+            Title="@Localization["Issue_LivePreview"]"
+            Subtitle="@($"{Workflow.TemplateName(Workflow.CurrentTemplate)} · {Workflow.CurrentTemplate.WidthMm} × {Workflow.CurrentTemplate.HeightMm} mm")"
+            DocumentNumber="@(Workflow.IssuedWarranty is null ? Localization["Issue_NumberOnSave"] : Workflow.IssuedWarranty.Number)"
+            Template="@Workflow.CurrentTemplate"
+            Model="@Workflow.PreviewModel" />
+    </div>
+}
+</div>

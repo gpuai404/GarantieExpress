@@ -1,0 +1,100 @@
+@inject ILocalizationService Localization
+
+<section class="history-list" aria-label="@Localization["History_Issued"]">
+    <div class="history-list-heading">
+        <label class="history-search">
+            <span>@Localization["History_Search"]</span>
+            <input value="@Search" @oninput="SearchChanged" placeholder="@Localization["History_SearchPlaceholder"]" />
+        </label>
+        <div>
+            <strong>@Localization.Format("History_Count", TotalCount)</strong>
+            <label><input type="checkbox" checked="@InkSaver" @onchange="OnInkSaverChanged" /> @Localization["Issue_InkSaver"]</label>
+        </div>
+    </div>
+    @if (Warranties.Count == 0)
+    {
+        <p class="history-no-results">@Localization["History_NoResults"]</p>
+    }
+    @foreach (var warranty in Warranties)
+    {
+        var effectiveStatus = EffectiveStatus(warranty);
+        <article class="history-row @StatusClass(effectiveStatus)">
+            <button type="button" class="history-summary" @onclick="() => OpenAsync(warranty)">
+                <span class="history-number"><strong>@warranty.Number</strong><em>@StatusText(warranty)</em></span>
+                <span>@warranty.BrandModel · @warranty.Serial</span>
+                <small>@warranty.PurchaseDate</small>
+            </button>
+            <div class="history-actions">
+                <button class="button secondary" data-testid="history-open" type="button" disabled="@Busy" @onclick="() => OpenAsync(warranty)">@Localization["History_Open"]</button>
+                <button class="button secondary" data-testid="history-duplicate" type="button" disabled="@Busy" @onclick="() => DuplicateAsync(warranty)">@Localization["History_Duplicate"]</button>
+                <button class="button secondary" data-testid="history-void" type="button" disabled="@(Busy || warranty.Status == WarrantyStatus.Voided)" @onclick="() => AskVoidAsync(warranty)">@Localization["History_Void"]</button>
+                <button class="button secondary" data-testid="history-delete" type="button" disabled="@Busy" @onclick="() => AskDeleteAsync(warranty)">@Localization["History_Delete"]</button>
+            </div>
+            @if (PendingWarranty?.Number == warranty.Number)
+            {
+                <div class="history-confirm" role="alert">
+                    <strong>@ConfirmationTitle</strong>
+                    <p>@ConfirmationText</p>
+                    <div>
+                        <button type="button" class="button danger" disabled="@Busy" @onclick="ConfirmActionAsync">@Localization["History_Confirm"]</button>
+                        <button type="button" class="button secondary" disabled="@Busy" @onclick="CancelConfirmationAsync">@Localization["History_Cancel"]</button>
+                    </div>
+                </div>
+            }
+        </article>
+    }
+    @if (PageCount > 1)
+    {
+        <nav class="history-pagination" aria-label="@Localization["History_Pagination"]">
+            <button type="button" class="button secondary" disabled="@(PageIndex == 0)" @onclick="PreviousPageAsync">
+                @Localization["History_PreviousPage"]
+            </button>
+            <span>@Localization.Format("History_PageOf", PageIndex + 1, PageCount)</span>
+            <button type="button" class="button secondary" disabled="@(PageIndex + 1 >= PageCount)" @onclick="NextPageAsync">
+                @Localization["History_NextPage"]
+            </button>
+        </nav>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<WarrantyRecord> Warranties { get; set; } = [];
+    [Parameter] public long TotalCount { get; set; }
+    [Parameter] public int PageIndex { get; set; }
+    [Parameter] public long PageCount { get; set; }
+    [Parameter] public string Search { get; set; } = string.Empty;
+    [Parameter] public bool InkSaver { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public WarrantyRecord? PendingWarranty { get; set; }
+    [Parameter] public string ConfirmationTitle { get; set; } = string.Empty;
+    [Parameter] public string ConfirmationText { get; set; } = string.Empty;
+    [Parameter] public Func<WarrantyRecord, WarrantyEffectiveStatus> EffectiveStatus { get; set; } =
+        warranty => warranty.Status == WarrantyStatus.Voided
+            ? WarrantyEffectiveStatus.Voided
+            : WarrantyEffectiveStatus.Active;
+    [Parameter] public Func<WarrantyRecord, string> StatusText { get; set; } = _ => string.Empty;
+    [Parameter] public EventCallback<int> PageChanged { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> SearchChanged { get; set; }
+    [Parameter] public EventCallback<bool> InkSaverChanged { get; set; }
+    [Parameter] public EventCallback<WarrantyRecord> Open { get; set; }
+    [Parameter] public EventCallback<WarrantyRecord> Duplicate { get; set; }
+    [Parameter] public EventCallback<WarrantyRecord> AskDelete { get; set; }
+    [Parameter] public EventCallback<WarrantyRecord> AskVoid { get; set; }
+    [Parameter] public EventCallback ConfirmAction { get; set; }
+    [Parameter] public EventCallback CancelConfirmation { get; set; }
+
+    private Task OpenAsync(WarrantyRecord warranty) => Open.InvokeAsync(warranty);
+    private Task DuplicateAsync(WarrantyRecord warranty) => Duplicate.InvokeAsync(warranty);
+    private Task AskDeleteAsync(WarrantyRecord warranty) => AskDelete.InvokeAsync(warranty);
+    private Task AskVoidAsync(WarrantyRecord warranty) => AskVoid.InvokeAsync(warranty);
+    private Task ConfirmActionAsync() => ConfirmAction.InvokeAsync();
+    private Task CancelConfirmationAsync() => CancelConfirmation.InvokeAsync();
+    private Task PreviousPageAsync() => PageChanged.InvokeAsync(PageIndex - 1);
+    private Task NextPageAsync() => PageChanged.InvokeAsync(PageIndex + 1);
+
+    private static string StatusClass(WarrantyEffectiveStatus status) =>
+        status.ToString().ToLowerInvariant();
+
+    private Task OnInkSaverChanged(ChangeEventArgs args) =>
+        InkSaverChanged.InvokeAsync(args.Value is bool value && value);
+}

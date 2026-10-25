@@ -1,0 +1,13 @@
+.brand-row { min-height: 4.5rem; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,.12); }
+.brand-content { width: 100%; padding: 0 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+.brand-link { color: white; text-decoration: none; font-size: 1.25rem; font-weight: 800; letter-spacing: .08em; }
+.brand-link span { color: #79c7e8; font-weight: 500; letter-spacing: .02em; }
+.navigation-toggle { padding: .3rem .55rem; color: white; background: transparent; border: 1px solid rgba(255,255,255,.25); border-radius: .35rem; line-height: 1; }
+.navigation { padding-top: 1rem; }
+.navigation.collapsed { display: none; }
+.navigation-item { padding: 0 1rem; font-size: .93rem; }
+.navigation-item ::deep a { min-height: 2.9rem; margin: .15rem 0; padding: .7rem .85rem; display: flex; align-items: center; color: #cbd9e1; text-decoration: none; border-radius: .5rem; }
+.navigation-item ::deep a.active { color: white; background: #2168a8; }
+.navigation-item ::deep a:hover { color: white; background: rgba(255,255,255,.08); }
+.nav-symbol { width: 1.5rem; margin-right: .65rem; text-align: center; font-size: 1.1rem; }
+@media (min-width: 760px) { .navigation-toggle { display: none; } .navigation.collapsed { display: block; } }

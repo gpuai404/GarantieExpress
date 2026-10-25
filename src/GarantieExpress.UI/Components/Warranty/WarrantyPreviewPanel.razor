@@ -1,0 +1,23 @@
+<section class="document-preview-panel warranty-print-target" data-testid="warranty-preview" aria-label="@Title">
+    <div class="preview-toolbar">
+        <div class="preview-heading"><span>@Title</span><strong>@Subtitle</strong></div>
+        @if (DocumentNumber is not null)
+        {
+            <span class="preview-number">@DocumentNumber</span>
+        }
+        @if (Actions is not null)
+        {
+            <div class="preview-actions">@Actions</div>
+        }
+    </div>
+    <WarrantyPreviewCanvas Template="@Template" Model="@Model" />
+</section>
+
+@code {
+    [Parameter, EditorRequired] public WarrantyTemplate Template { get; set; } = default!;
+    [Parameter, EditorRequired] public WarrantyDisplayModel Model { get; set; } = default!;
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string? DocumentNumber { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+}

@@ -1,0 +1,13 @@
+<div class="duration-options">
+    @foreach (var option in Options)
+    {
+        <span class="duration-option @(option.IsSelected ? "selected" : null)">
+            <span class="mark" aria-hidden="true">@(option.IsSelected ? "✓" : string.Empty)</span>
+            <span>@option.Label</span>
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required IReadOnlyList<DurationOption> Options { get; set; }
+}

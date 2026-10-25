@@ -1,0 +1,59 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Id="GarantieExpress.Desktop"
+    Name="GarantieExpress"
+    Manufacturer="GarantieExpress"
+    Version="$(PackageVersion)"
+    Scope="perMachine"
+    InstallerVersion="500">
+
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch
+        Id="WindowsBuildNumberSearch"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+        Name="CurrentBuildNumber"
+        Type="raw" />
+    </Property>
+    <Launch
+      Condition="Installed OR (WINDOWSBUILDNUMBER &gt;= 26100)"
+      Message="GarantieExpress requires Windows 11 version 24H2 or later." />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of GarantieExpress is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="GarantieExpress" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="GarantieExpress" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="GarantieExpress" AllowAbsent="no">
+      <Files Include="!(bindpath.publish)\**" Directory="INSTALLFOLDER">
+        <Exclude Files="!(bindpath.publish)\**.pdb" />
+      </Files>
+
+      <Component
+        Id="ApplicationStartMenuShortcut"
+        Directory="ApplicationProgramsFolder"
+        Guid="E289C65E-94DD-4C2A-91BA-C69DA8880ED4">
+        <Shortcut
+          Id="StartMenuShortcut"
+          Name="GarantieExpress"
+          Description="Open GarantieExpress"
+          Target="[INSTALLFOLDER]GarantieExpress.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\GarantieExpress"
+          Name="Installed"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </Feature>
+  </Package>
+</Wix>

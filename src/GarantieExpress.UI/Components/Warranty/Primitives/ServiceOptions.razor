@@ -1,0 +1,13 @@
+@if (Options?.FirstOrDefault(option => option.IsSelected) is { } selected)
+{
+    <span class="service-type">@selected.Label</span>
+}
+@if (!string.IsNullOrWhiteSpace(Note))
+{
+    <p class="service-note">@Note</p>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ServiceOption>? Options { get; set; }
+    [Parameter] public string? Note { get; set; }
+}

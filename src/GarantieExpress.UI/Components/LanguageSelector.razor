@@ -1,0 +1,39 @@
+@inject LocalizationService Localization
+@inject NavigationManager Navigation
+@inject PendingChangesCoordinator PendingChanges
+@using GarantieExpress.Application.Common
+
+<div class="language-selector">
+    <label for="language-select">@Localization["Language"]</label>
+    <select id="language-select" value="@Localization.CurrentLanguage" disabled="@_changing" @onchange="ChangeLanguageAsync">
+        @foreach (var language in LocalizationService.SupportedLanguages)
+        {
+            <option value="@language.Code">@language.Name</option>
+        }
+    </select>
+    @if (_error is not null)
+    {
+        <span class="error" role="alert">@_error</span>
+    }
+</div>
+
+@code {
+    private bool _changing;
+    private string? _error;
+
+    private async Task ChangeLanguageAsync(ChangeEventArgs args)
+    {
+        if (_changing) return;
+        _changing = true;
+        try
+        {
+            var result = await PendingChanges.FlushAsync();
+            _error = result is OperationResult.Failed failed ? failed.Error : null;
+            if (result is OperationResult.Failed) return;
+
+            await Localization.SetLanguageAsync(args.Value?.ToString() ?? LocalizationService.DefaultLanguage);
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
+        finally { _changing = false; }
+    }
+}

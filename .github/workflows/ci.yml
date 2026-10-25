@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      application-version: ${{ steps.app-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Read and validate application version
+        id: app-version
+        shell: bash
+        run: |
+          version="$(dotnet msbuild src/GarantieExpress.Host/GarantieExpress.Host.csproj -getProperty:VersionPrefix)"
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "VersionPrefix must be stable SemVer MAJOR.MINOR.PATCH without leading zeroes." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate update manifest
+        shell: bash
+        env:
+          APPLICATION_VERSION: ${{ steps.app-version.outputs.version }}
+        run: |
+          manifest=.github/pages/update.json
+          schema_version="$(jq -er '.schemaVersion' "$manifest")"
+          latest_version="$(jq -er '.latestVersion' "$manifest")"
+          minimum_version="$(jq -er '.minimumSupportedVersion' "$manifest")"
+
+          if [[ "$schema_version" != "2" ]]; then
+            echo "The update manifest schemaVersion must be 2." >&2
+            exit 1
+          fi
+
+          if jq -e 'has("downloadUrl")' "$manifest" >/dev/null; then
+            echo "The update manifest must not define downloadUrl; the application uses a trusted destination." >&2
+            exit 1
+          fi
+
+          version_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if [[ ! "$latest_version" =~ $version_pattern || ! "$minimum_version" =~ $version_pattern ]]; then
+            echo "Update manifest versions must use stable SemVer MAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+
+          if [[ "$latest_version" != "$APPLICATION_VERSION" ]]; then
+            echo "Manifest latestVersion must match VersionPrefix $APPLICATION_VERSION." >&2
+            exit 1
+          fi
+
+          greatest_version="$(printf '%s\n%s\n' "$minimum_version" "$latest_version" | sort -V | tail -n 1)"
+          if [[ "$greatest_version" != "$latest_version" ]]; then
+            echo "minimumSupportedVersion cannot be newer than latestVersion." >&2
+            exit 1
+          fi
+
+      - name: Verify release tag matches application version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          APPLICATION_VERSION: ${{ steps.app-version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "$RELEASE_TAG" != "v$APPLICATION_VERSION" ]]; then
+            echo "Release tag must be v$APPLICATION_VERSION; got $RELEASE_TAG." >&2
+            exit 1
+          fi
+
+          previous_version="$(
+            git tag --list 'v*' \
+              | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' \
+              | sed 's/^v//' \
+              | grep -Fvx "$APPLICATION_VERSION" \
+              | sort -V \
+              | tail -n 1 || true
+          )"
+          if [[ -n "$previous_version" ]]; then
+            greatest_version="$(printf '%s\n%s\n' "$previous_version" "$APPLICATION_VERSION" | sort -V | tail -n 1)"
+            if [[ "$greatest_version" != "$APPLICATION_VERSION" ]]; then
+              echo "Release version $APPLICATION_VERSION must be greater than the previous release $previous_version." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Restore JavaScript dependencies
+        run: npm ci
+
+      - name: Restore .NET dependencies
+        run: dotnet restore
+
+      - name: Build with warnings as errors
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Run C# tests
+        run: dotnet test --configuration Release --no-build --no-restore --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Run JavaScript tests
+        run: npm test
+
+      - name: Audit NuGet dependencies
+        run: dotnet list GarantieExpress.slnx package --vulnerable --include-transitive
+
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
+
+      - name: Publish immutable release artifact
+        run: dotnet publish src/GarantieExpress.Host/GarantieExpress.Host.csproj --configuration Release --no-restore --output artifacts/publish
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: garantie-express
+          path: artifacts/publish/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload browser failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  windows-package:
+    name: Windows package (${{ matrix.architecture }})
+    needs: validate
+    runs-on: windows-latest
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [x64, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build unsigned MSI
+        shell: pwsh
+        run: ./packaging/windows/build-installer.ps1 -Architecture ${{ matrix.architecture }} -Version ${{ needs.validate.outputs.application-version }} -Unsigned
+
+      - name: Upload unsigned MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: garantie-express-win-${{ matrix.architecture }}
+          path: |
+            artifacts/package/windows/win-${{ matrix.architecture }}/installer/*.msi
+            artifacts/package/windows/win-${{ matrix.architecture }}/installer/*.sha256
+          if-no-files-found: error
+          retention-days: 14

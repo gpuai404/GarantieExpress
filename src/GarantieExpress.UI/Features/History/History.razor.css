@@ -1,0 +1,14 @@
+.history-layout {
+    margin-top: 1.25rem;
+    display: grid;
+    gap: 1.25rem;
+    --preview-toolbar-align: end;
+}
+
+@media (max-width: 800px) {
+    .history-layout {
+        --preview-scale: .42;
+        --preview-toolbar-display: grid;
+        --preview-toolbar-align: stretch;
+    }
+}

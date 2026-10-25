@@ -1,0 +1,14 @@
+.preview-viewport {
+    padding: var(--preview-padding, 1.25rem);
+    overflow: auto;
+}
+
+.preview-canvas {
+    width: calc(var(--document-width) * var(--preview-scale, .63));
+    height: calc(var(--document-height) * var(--preview-scale, .63));
+    transform-origin: top left;
+}
+
+.preview-canvas ::deep .warranty-document {
+    zoom: var(--preview-scale, .63);
+}

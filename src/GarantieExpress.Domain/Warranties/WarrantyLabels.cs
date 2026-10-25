@@ -1,0 +1,25 @@
+namespace GarantieExpress.Domain;
+
+public sealed record WarrantyLabels(
+    string CertificateEyebrow,
+    string CertificateTitle,
+    string ProductDetails,
+    string RegisteredProduct,
+    string ProductType,
+    string BrandModel,
+    string Purchase,
+    string PurchaseDate,
+    string Price,
+    string Warranty,
+    string ValidUntil,
+    string Terms,
+    string Customer,
+    string CustomerName,
+    string Signature,
+    string IssuedOn,
+    string IdentifierHint,
+    string? ValidFrom = null,
+    string? ServiceType = null,
+    string? ServiceSale = null,
+    string? ServiceRepair = null,
+    string? RepairNote = null);

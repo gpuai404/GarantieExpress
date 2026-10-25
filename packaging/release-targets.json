@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "framework": "net10.0",
+  "lastVerified": "2026-10-11",
+  "browsers": {
+    "policy": "Current stable version",
+    "windows": [
+      "Microsoft Edge",
+      "Google Chrome",
+      "Mozilla Firefox"
+    ],
+    "macOS": [
+      "Apple Safari",
+      "Google Chrome",
+      "Mozilla Firefox"
+    ]
+  },
+  "targets": [
+    {
+      "runtimeIdentifier": "win-x64",
+      "operatingSystem": "Windows 11 24H2 or later",
+      "architecture": "x64",
+      "installer": "MSI"
+    },
+    {
+      "runtimeIdentifier": "win-arm64",
+      "operatingSystem": "Windows 11 24H2 or later",
+      "architecture": "Arm64",
+      "installer": "MSI"
+    },
+    {
+      "runtimeIdentifier": "osx-x64",
+      "operatingSystem": "macOS 15 or later",
+      "architecture": "x64",
+      "installer": "PKG"
+    },
+    {
+      "runtimeIdentifier": "osx-arm64",
+      "operatingSystem": "macOS 15 or later",
+      "architecture": "Arm64",
+      "installer": "PKG"
+    }
+  ]
+}

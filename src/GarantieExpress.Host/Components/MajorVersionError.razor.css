@@ -1,0 +1,32 @@
+.server-error {
+    min-height: 100vh;
+    padding: clamp(1.5rem, 7vw, 5rem);
+    display: grid;
+    place-items: center;
+    background: #172b38;
+}
+
+.server-error-card {
+    width: min(100%, 620px);
+    padding: clamp(1.5rem, 5vw, 3.5rem);
+    background: white;
+    border-top: .45rem solid #b42318;
+    border-radius: .85rem;
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .28);
+}
+
+.server-error-card > p:not(.eyebrow) {
+    color: #465f6c;
+    font-size: 1.1rem;
+}
+
+.server-error-actions {
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+@media (max-width: 480px) {
+    .server-error-actions { display: grid; }
+}

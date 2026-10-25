@@ -1,0 +1,73 @@
+@namespace GarantieExpress.UI.Components.Warranty.Templates
+@using GarantieExpress.UI.Components.Warranty.Primitives
+@inject ThemePresentation ThemePresentation
+
+<article class="warranty-document warranty-a6" data-template="a6-essential" data-print-bounded style="@ThemePresentation.ToCssVariables(Model.Theme)">
+    <header class="receipt-store-header">
+        <div>
+            @if (Model.LogoDataUri is not null)
+            {
+                <img src="@Model.LogoDataUri" alt="" />
+            }
+            else
+            {
+                <strong>@Model.StoreName</strong>
+            }
+            <span>@Model.Slogan</span>
+        </div>
+        <small>@ContactLine</small>
+    </header>
+
+    <section class="receipt-title">
+        <span>@Model.Labels.CertificateEyebrow</span>
+        <h2>@Model.Labels.CertificateTitle</h2>
+        <strong>@Model.Number</strong>
+    </section>
+
+    <section class="receipt-product">
+        <div class="receipt-product-art"><ProductIllustration SvgMarkup="@Model.IllustrationSvg" /></div>
+        <div class="receipt-product-copy" data-print-bounded>
+            <ServiceOptions Options="@Model.ServiceOptions" Note="@Model.RepairNote" />
+            <span>@Model.CategoryName</span>
+            <strong>@Model.BrandModel</strong>
+            <dl><dt>@Model.SerialLabel</dt><dd>@Model.Serial</dd></dl>
+        </div>
+    </section>
+
+    <section class="receipt-purchase">
+        <div><span>@Model.Labels.PurchaseDate</span><strong>@Model.PurchaseDate</strong></div>
+        <div><span>@Model.Labels.Price</span><strong>@Model.Price</strong></div>
+    </section>
+
+    <section class="receipt-warranty">
+        <div class="receipt-section-title">
+            <span>@Model.Labels.Warranty</span>
+        </div>
+        <DurationOptions Options="@Model.Durations" />
+        <div class="coverage-dates" data-print-bounded>
+            @if (Model.ValidFrom is not null)
+            {
+                <p><span>@Model.Labels.ValidFrom</span><strong>@Model.ValidFrom</strong></p>
+            }
+            <p><span>@Model.Labels.ValidUntil</span><strong>@Model.EndDate</strong></p>
+        </div>
+    </section>
+
+    <section class="receipt-terms" data-print-bounded>
+        <strong>@Model.Labels.Terms</strong>
+        <p data-print-bounded>@Model.ShortTerms</p>
+    </section>
+
+    <section class="receipt-signatures">
+        <SignatureLine Label="@Model.Labels.Customer" Hint="@Model.Labels.CustomerName" />
+        <SignatureLine Label="@Model.Labels.Signature" />
+        <p><span>@Model.Labels.IssuedOn</span><strong>@Model.IssuedDate</strong></p>
+    </section>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public required WarrantyDisplayModel Model { get; set; }
+
+    private string ContactLine => string.Join(" · ", new[] { Model.Address, Model.Phone, Model.Vat }
+        .Where(value => !string.IsNullOrWhiteSpace(value)));
+}

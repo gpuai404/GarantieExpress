@@ -1,0 +1,51 @@
+@using GarantieExpress.UI.Components.Warranty.Primitives
+@inject ILocalizationService Localization
+@inject CategoryDisplayResolver CategoryDisplay
+@inject WarrantyDurationFormatter DurationFormatter
+
+<div class="catalog-summary">
+    <strong>@Localization.Format("Categories_Count", Categories.Count(category => !category.IsArchived))</strong>
+    <span>@Localization.Format("Categories_BarCount", Categories.Count(category => category.ShowInBar && !category.IsArchived), 5)</span>
+</div>
+
+<div class="card-grid category-grid">
+    @foreach (var category in Categories)
+    {
+        <article class="feature-card static-card category-card @(category.IsArchived ? "archived" : null)">
+            <span class="card-number">@category.SortOrder.ToString("00")</span>
+            <ProductIllustration SvgMarkup="@CategoryDisplay.ResolveIllustration(category, IllustrationVariant.Simple)" />
+            <div class="category-title">
+                <h2>@CategoryDisplay.DisplayName(category)</h2>
+                <span class="kind-badge">@(category.IsBuiltIn ? Localization["Categories_BuiltIn"] : Localization["Categories_Custom"])</span>
+                @if (category.IsArchived) { <span class="kind-badge archived-badge">@Localization["Categories_Archived"]</span> }
+            </div>
+            <p>@string.Join(" · ", category.Fields.Select(field => CategoryDisplay.FieldLabel(category, field)))</p>
+            <div class="category-meta">
+                <span>@string.Join(" · ", category.DefaultDurationsMonths.Select(DurationFormatter.FormatDuration))</span>
+                <span>@category.Svgs.Count @Localization["Categories_IllustrationVariants"]</span>
+            </div>
+            <label class="bar-toggle"><input type="checkbox" checked="@category.ShowInBar" disabled="@category.IsArchived" @onchange="args => ToggleBarAsync(category, args)" /> @Localization["Categories_ShowInBar"]</label>
+            <div class="category-actions">
+                @if (!category.IsBuiltIn)
+                {
+                    <button type="button" class="button secondary" data-testid="category-edit" @onclick="() => EditAsync(category)">@Localization["Categories_EditAction"]</button>
+                }
+                <button type="button" class="button secondary" data-testid="category-duplicate" @onclick="() => DuplicateAsync(category)">@Localization["Categories_Duplicate"]</button>
+                <button type="button" class="text-button" data-testid="category-archive" @onclick="() => SetArchivedAsync(category, !category.IsArchived)">@(category.IsArchived ? Localization["Categories_Restore"] : category.IsBuiltIn ? Localization["Categories_Hide"] : Localization["Categories_Archive"])</button>
+            </div>
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Category> Categories { get; set; } = [];
+    [Parameter] public EventCallback<Category> EditRequested { get; set; }
+    [Parameter] public EventCallback<Category> DuplicateRequested { get; set; }
+    [Parameter] public EventCallback<(Category Category, ChangeEventArgs Args)> ToggleBar { get; set; }
+    [Parameter] public EventCallback<(Category Category, bool Archived)> SetArchived { get; set; }
+
+    private Task EditAsync(Category category) => EditRequested.InvokeAsync(category);
+    private Task DuplicateAsync(Category category) => DuplicateRequested.InvokeAsync(category);
+    private Task ToggleBarAsync(Category category, ChangeEventArgs args) => ToggleBar.InvokeAsync((category, args));
+    private Task SetArchivedAsync(Category category, bool archived) => SetArchived.InvokeAsync((category, archived));
+}

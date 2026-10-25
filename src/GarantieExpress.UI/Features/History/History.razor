@@ -1,0 +1,65 @@
+@page "/historiek"
+
+<PageTitle>@Localization["History_Title"] · GarantieExpress</PageTitle>
+<div class="history-page">
+<div class="page-heading"><div><p class="eyebrow">@Localization["History_Eyebrow"]</p><h1>@Localization["History_Title"]</h1><p>@Localization["History_Intro"]</p></div></div>
+
+@if (_loading)
+{
+    <p class="notice">@Localization["History_Loading"]</p>
+}
+else if (!string.IsNullOrWhiteSpace(_loadError))
+{
+    <div class="notice error" role="alert">@_loadError</div>
+}
+else if (_totalCount == 0 && string.IsNullOrWhiteSpace(_search))
+{
+    <div class="empty-state"><span>08</span><h2>@Localization["History_Empty"]</h2><p>@Localization["History_EmptyText"]</p></div>
+}
+else
+{
+    <div class="history-layout">
+        @if (!string.IsNullOrWhiteSpace(_actionMessage))
+        {
+            <div class="notice @(_actionFailed ? "error" : "success")" role="status">@_actionMessage</div>
+        }
+        <HistoryListPanel
+            Warranties="@_warranties"
+            TotalCount="@_totalCount"
+            PageIndex="@_pageIndex"
+            PageCount="@PageCount"
+            Search="@_search"
+            InkSaver="@_inkSaver"
+            Busy="@_busy"
+            PendingWarranty="@_pendingWarranty"
+            ConfirmationTitle="@ConfirmationTitle"
+            ConfirmationText="@ConfirmationText"
+            EffectiveStatus="@EffectiveStatus"
+            StatusText="@StatusText"
+            SearchChanged="@SearchAsync"
+            PageChanged="@ChangePageAsync"
+            InkSaverChanged="@OnInkSaverChanged"
+            Open="@OpenAsync"
+            Duplicate="@DuplicateAsync"
+            AskDelete="@AskDelete"
+            AskVoid="@AskVoid"
+            ConfirmAction="@ConfirmActionAsync"
+            CancelConfirmation="@CancelConfirmation" />
+
+        @if (_selectedModel is not null && _selectedTemplate is not null)
+        {
+            <HistoryPreviewPanel
+                Title="@Localization["History_OriginalSnapshot"]"
+                TemplateLabel="@Localization["History_Template"]"
+                PageSizeLabel="@Localization["History_PageSize"]"
+                PrintLabel="@Localization["History_Reprint"]"
+                Printing="@_printing"
+                SelectedTemplate="@_selectedTemplate"
+                Model="@_selectedModel"
+                DesignChanged="@ChangeDesign"
+                PageSizeChanged="@ChangePageSize"
+                PrintClick="@PrintSelectedAsync" />
+        }
+    </div>
+}
+</div>

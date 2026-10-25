@@ -1,0 +1,61 @@
+# .NET and IDE output
+bin/
+obj/
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# Node and test output
+node_modules/
+TestResults/
+artifacts/
+playwright-report/
+test-results/
+coverage/
+
+# Published packages and installers
+publish/
+dist/
+*.nupkg
+*.snupkg
+*.msi
+*.pkg
+*.dmg
+
+# Runtime and customer data
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+/backups/
+/data/
+/exports/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+
+# Signing keys and certificates
+*.cer
+*.crt
+*.key
+*.mobileprovision
+*.p12
+*.pem
+*.pfx
+*.provisionprofile
+*.snk
+
+# Logs, temporary files, and operating-system metadata
+*.log
+*.tmp
+.DS_Store
+Desktop.ini
+Thumbs.db

@@ -1,0 +1,34 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <AcceptEula>wix7</AcceptEula>
+    <InstallerPlatform Condition="'$(InstallerPlatform)' == ''">x64</InstallerPlatform>
+    <PublishDirectory Condition="'$(PublishDirectory)' == ''">$(MSBuildThisFileDirectory)..\..\artifacts\package\windows\win-$(InstallerPlatform)\publish</PublishDirectory>
+    <DefineConstants>PackageVersion=$(PackageVersion)</DefineConstants>
+    <OutputName>GarantieExpress-$(PackageVersion)-win-$(InstallerPlatform)</OutputName>
+    <!-- The published app includes intentionally unversioned configuration and static files. -->
+    <SuppressIces>ICE60</SuppressIces>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <BindPath Include="$(PublishDirectory)" BindName="publish" />
+  </ItemGroup>
+
+  <Target Name="ValidateInstallerInputs" BeforeTargets="Build">
+    <Error
+      Condition="'$(PackageVersion)' == ''"
+      Text="PackageVersion is required and must use stable SemVer MAJOR.MINOR.PATCH format." />
+    <Error
+      Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(PackageVersion)', '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'))"
+      Text="PackageVersion must use stable SemVer MAJOR.MINOR.PATCH format without leading zeroes." />
+    <Error
+      Condition="'$(PackageVersion)' != '$(VersionPrefix)'"
+      Text="PackageVersion must match VersionPrefix from Directory.Build.props." />
+    <Error
+      Condition="'$(InstallerPlatform)' != 'x64' and '$(InstallerPlatform)' != 'arm64'"
+      Text="InstallerPlatform must be x64 or arm64." />
+    <Error
+      Condition="!Exists('$(PublishDirectory)\GarantieExpress.exe')"
+      Text="The self-contained publish output was not found at $(PublishDirectory)." />
+  </Target>
+</Project>

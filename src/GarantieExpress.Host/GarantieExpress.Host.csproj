@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>GarantieExpress</AssemblyName>
+    <Product>GarantieExpress</Product>
+    <Company>GarantieExpress</Company>
+    <Description>Offline warranty management</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GarantieExpress.Application\GarantieExpress.Application.csproj" />
+    <ProjectReference Include="..\GarantieExpress.Infrastructure\GarantieExpress.Infrastructure.csproj" />
+    <ProjectReference Include="..\GarantieExpress.UI\GarantieExpress.UI.csproj" />
+  </ItemGroup>
+</Project>

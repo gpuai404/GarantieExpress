@@ -1,0 +1,53 @@
+@inject ThemePresentation ThemePresentation
+@inject WarrantyDurationFormatter DurationFormatter
+@inject ILocalizationService Localization
+
+<div class="theme-preview" style="@ThemePresentation.ToCssVariables(Settings.Theme)">
+    <header>
+        <div>
+            <strong>@Settings.Name</strong>
+            <small>@Settings.Slogan</small>
+        </div>
+        <span>@Localization["Theme_PreviewPartner"]</span>
+    </header>
+    <div class="category-strip">
+        @foreach (var service in Settings.Services.Take(3))
+        {
+            <span>◇ @service</span>
+        }
+    </div>
+    <section class="title-band">
+        <div><small>@Localization["Theme_PreviewEyebrow"]</small><h3>@Localization["Theme_PreviewTitle"]</h3></div>
+        <div class="badge"><small>@Localization["Settings_Warranty"]</small><strong>@SelectedDuration</strong></div>
+    </section>
+    <div class="preview-body">
+        <section class="product-card">
+            <small>01 · @Localization["Theme_PreviewProduct"]</small>
+            <strong>Apple iPhone 15 · 128 GB</strong>
+            <dl>
+                <div><dt>@Localization["Category_Smartphone"]</dt><dd>Smartphone</dd></div>
+                <div><dt>@Localization["Field_Imei"]</dt><dd>356938035643809</dd></div>
+            </dl>
+        </section>
+        <aside>
+            <div class="illustration" aria-hidden="true"><span></span></div>
+            <strong>iPhone 15</strong>
+            <small>128 GB · Smartphone</small>
+        </aside>
+    </div>
+    <div class="summary-row">
+        <div><small>@Localization["Theme_PreviewPurchase"]</small><strong>28.09.2026</strong></div>
+        <div><small>@Localization["Theme_PreviewPrice"]</small><strong>€ 899,00</strong></div>
+        <div><small>@Localization["Settings_Warranty"]</small><strong>@SelectedDuration</strong></div>
+    </div>
+    <section class="terms"><strong>@Localization["Settings_FullTerms"]</strong><p>@Settings.ShortTerms</p></section>
+    <footer><span>@Settings.Name</span><em>@Settings.Slogan</em></footer>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SettingsFormModel Settings { get; set; }
+
+    private string SelectedDuration => DurationFormatter.FormatDuration(
+        Settings.OfferedDurationsMonths.LastOrDefault(24));
+}
