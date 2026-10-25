@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "latestVersion": "1.0.2",
-  "minimumSupportedVersion": "1.0.2",
-  "message": "Version 1.0.2 is required because older versions are no longer compatible."
+  "latestVersion": "1.0.1",
+  "minimumSupportedVersion": "1.0.1",
+  "message": "Version 1.0.1 is required because older versions are no longer compatible."
 }
