@@ -82,6 +82,32 @@ public sealed class WarrantyIssueRecoveryCoordinatorTests
         Assert.False(coordinator.IsReady);
     }
 
+    [Fact]
+    public async Task CompleteAsync_forgets_the_pending_request_when_cleanup_fails()
+    {
+        var store = new RecoveryStore();
+        var coordinator = CreateCoordinator(store);
+        await coordinator.InitializeAsync();
+        await coordinator.PrepareAsync(Now);
+        store.ClearError = new OperationError("Test.Clear", "Cleanup failed");
+
+        var cleanup = await coordinator.CompleteAsync();
+        var recovery = await coordinator.RecoverPendingAsync();
+
+        Assert.IsType<OperationResult.Failed>(cleanup);
+        Assert.False(coordinator.IsReady);
+        Assert.False(coordinator.HasPendingRequest);
+        Assert.Null(Assert.IsType<
+            OperationResult<WarrantyIssueResult?>.Succeeded>(recovery).Value);
+
+        store.ClearError = null;
+        var retry = await coordinator.InitializeAsync();
+
+        Assert.IsType<OperationResult<WarrantyIssueResult?>.Succeeded>(retry);
+        Assert.True(coordinator.IsReady);
+        Assert.Equal(2, store.ClearCalls);
+    }
+
     private static WarrantyIssueRecoveryCoordinator CreateCoordinator(RecoveryStore store) =>
         new(
             new WarrantyIssueRecoveryService(new EmptyIssueRepository()),
@@ -92,6 +118,7 @@ public sealed class WarrantyIssueRecoveryCoordinatorTests
         public WarrantyIssueRequest? StoredRequest { get; init; }
         public WarrantyIssueRequest? SavedRequest { get; private set; }
         public OperationError? GetError { get; init; }
+        public OperationError? ClearError { get; set; }
         public int SaveCalls { get; private set; }
         public int ClearCalls { get; private set; }
         public string? ClearedRequestId { get; private set; }
@@ -117,7 +144,9 @@ public sealed class WarrantyIssueRecoveryCoordinatorTests
         {
             ClearCalls++;
             ClearedRequestId = requestId;
-            return Task.FromResult(OperationResult.Success());
+            return Task.FromResult(ClearError is null
+                ? OperationResult.Success()
+                : OperationResult.Failure(ClearError));
         }
     }
 

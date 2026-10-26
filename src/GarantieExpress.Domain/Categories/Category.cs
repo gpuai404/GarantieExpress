@@ -193,9 +193,6 @@ public sealed class Category
 
     public Category Unarchive() => Copy(_catalogState.Unarchive());
 
-    public DomainResult<Category, CategoryError> SetBarVisibility(bool showInBar) =>
-        _catalogState.SetBarVisibility(showInBar).Map(Copy);
-
     public DomainResult<Category, CategoryError> WithIllustrations(
         IReadOnlyDictionary<IllustrationVariant, string>? illustrations) =>
         CreateCore(

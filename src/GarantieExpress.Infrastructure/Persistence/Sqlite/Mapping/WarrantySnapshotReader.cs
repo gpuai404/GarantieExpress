@@ -11,8 +11,12 @@ internal static class WarrantySnapshotReader
         string payload,
         string expectedId)
     {
+        var document = SqliteStoredData.Deserialize<WarrantySnapshotPayload>(payload);
+        if (document.HashVersion != WarrantySnapshotHasher.CurrentVersion)
+            return Invalid("HashVersionUnsupported");
+
         var restored = WarrantySnapshotPayloadMapper.ToDomain(
-            SqliteStoredData.Deserialize<WarrantySnapshotPayload>(payload),
+            document,
             expectedId);
         return restored.Match(
             snapshot => string.Equals(

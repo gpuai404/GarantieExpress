@@ -20,11 +20,9 @@ public sealed class WarrantyDisplayModelBuilder(
         StoreSettings settings,
         Category category,
         DraftWarranty draft,
-        IReadOnlyList<Category> categories,
         string number = "— CONCEPT —",
         IllustrationVariant illustration = IllustrationVariant.Detailed)
     {
-        var catalog = new CategorySelection(categories);
         var duration = draft.DurationMonths > 0
             ? draft.DurationMonths
             : settings.OfferedDurationsMonths.FirstOrDefault(12);
@@ -45,7 +43,6 @@ public sealed class WarrantyDisplayModelBuilder(
             settings.Phone,
             settings.Vat,
             categoryDisplay.DisplayName(category),
-            catalog.BarItems().Select(categoryDisplay.DisplayName).ToList(),
             categoryDisplay.ResolveIllustration(category, illustration),
             string.IsNullOrWhiteSpace(draft.BrandModel) ? localization["Template_PlaceholderBrandModel"] : draft.BrandModel.Trim(),
             categoryDisplay.FieldLabel(category, identifier),
@@ -91,7 +88,6 @@ public sealed class WarrantyDisplayModelBuilder(
             snapshot.Store.Phone,
             snapshot.Store.Vat,
             snapshot.Category.Name,
-            snapshot.CategoryBarItems,
             categoryDisplay.ResolveIllustration(snapshot.Category, illustration),
             warranty.BrandModel,
             identifier.Label,
@@ -112,7 +108,7 @@ public sealed class WarrantyDisplayModelBuilder(
             warranty.ServiceType == WarrantyServiceType.Repair ? WarrantyRules.NormalizeRepairNote(warranty.RepairNote) : null);
     }
 
-    // Records issued before service types existed keep their original category bar.
+    // Records issued before service types existed have no frozen service labels.
     private static IReadOnlyList<ServiceOption> BuildServiceOptions(WarrantyLabels labels, WarrantyServiceType? serviceType) =>
         serviceType is null || labels.ServiceSale is null || labels.ServiceRepair is null
             ? []

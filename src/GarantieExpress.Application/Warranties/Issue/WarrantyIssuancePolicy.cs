@@ -23,7 +23,7 @@ public sealed class WarrantyIssuancePolicy(
         ArgumentNullException.ThrowIfNull(draft);
         ArgumentNullException.ThrowIfNull(catalog);
 
-        if (draft.Version < 0)
+        if (!draft.HasValidIdentity)
             return Failure("Warranty.InvalidDraft", "Error_InvalidData");
 
         if (category.IsArchived

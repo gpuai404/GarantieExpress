@@ -41,7 +41,11 @@ internal sealed class DraftRepository(
         ArgumentNullException.ThrowIfNull(draft);
         return operations.ExecuteAsync("save draft", cancellationToken, async () =>
         {
-            var payload = SqliteStoredData.Serialize(DraftWarrantyPayloadMapper.FromDomain(draft));
+            var persistedDraft = string.IsNullOrEmpty(draft.Id)
+                ? draft with { Id = Guid.NewGuid().ToString("N") }
+                : draft;
+            var payload = SqliteStoredData.Serialize(
+                DraftWarrantyPayloadMapper.FromDomain(persistedDraft));
             await using var connection = await connections.OpenAsync(cancellationToken);
             await using var command = connection.CreateCommand();
             command.CommandText = draft.Version == 0
@@ -51,20 +55,32 @@ internal sealed class DraftRepository(
                     ON CONFLICT(Id) DO NOTHING
                     RETURNING Version;
                     """
-                : """
+                : string.IsNullOrEmpty(draft.Id)
+                    ? """
                     UPDATE Drafts
                     SET PayloadJson = $payload, Version = Version + 1, UpdatedAtUtc = $updated
-                    WHERE Id = 1 AND Version = $expectedVersion
+                    WHERE Id = 1
+                      AND Version = $expectedVersion
+                      AND json_extract(PayloadJson, '$.id') IS NULL
+                    RETURNING Version;
+                    """
+                    : """
+                    UPDATE Drafts
+                    SET PayloadJson = $payload, Version = Version + 1, UpdatedAtUtc = $updated
+                    WHERE Id = 1
+                      AND Version = $expectedVersion
+                      AND json_extract(PayloadJson, '$.id') = $expectedId
                     RETURNING Version;
                     """;
             command.Parameters.AddWithValue("$payload", payload);
             command.Parameters.AddWithValue("$updated", draft.SavedAt.ToString("O"));
             command.Parameters.AddWithValue("$expectedVersion", draft.Version);
+            command.Parameters.AddWithValue("$expectedId", draft.Id);
             var version = await command.ExecuteScalarAsync(cancellationToken);
             return version is null
                 ? OperationResult<DraftWarranty>.Failure(new OperationError(
                     "Storage.StaleDraft", "This draft was changed or consumed by another session."))
-                : OperationResult<DraftWarranty>.Success(draft with
+                : OperationResult<DraftWarranty>.Success(persistedDraft with
                 {
                     Version = SqliteStoredData.Decode(() => Convert.ToInt64(version))
                 });
@@ -72,6 +88,7 @@ internal sealed class DraftRepository(
     }
 
     public Task<OperationResult> ClearAsync(
+        string expectedId,
         long expectedVersion,
         CancellationToken cancellationToken = default)
     {
@@ -81,11 +98,21 @@ internal sealed class DraftRepository(
         {
             await using var connection = await connections.OpenAsync(cancellationToken);
             await using var command = connection.CreateCommand();
-            command.CommandText = """
-                DELETE FROM Drafts
-                WHERE Id = 1 AND Version = $expectedVersion;
-                """;
+            command.CommandText = string.IsNullOrEmpty(expectedId)
+                ? """
+                    DELETE FROM Drafts
+                    WHERE Id = 1
+                      AND Version = $expectedVersion
+                      AND json_extract(PayloadJson, '$.id') IS NULL;
+                    """
+                : """
+                    DELETE FROM Drafts
+                    WHERE Id = 1
+                      AND Version = $expectedVersion
+                      AND json_extract(PayloadJson, '$.id') = $expectedId;
+                    """;
             command.Parameters.AddWithValue("$expectedVersion", expectedVersion);
+            command.Parameters.AddWithValue("$expectedId", expectedId);
             var affected = await command.ExecuteNonQueryAsync(cancellationToken);
             return affected == 1
                 ? OperationResult.Success()

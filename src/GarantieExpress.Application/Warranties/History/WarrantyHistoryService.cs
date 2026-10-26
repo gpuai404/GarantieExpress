@@ -56,6 +56,7 @@ public sealed class WarrantyHistoryService(
 
         var draft = new DraftWarranty
         {
+            Id = draftToReplace?.Id ?? string.Empty,
             Version = draftToReplace?.Version ?? 0,
             ServiceType = warranty.ServiceType ?? WarrantyServiceType.Sale,
             RepairNote = warranty.RepairNote,

@@ -22,7 +22,7 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of GarantieExpress is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <StandardDirectory Id="ProgramFiles64Folder">
+    <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="GarantieExpress" />
     </StandardDirectory>
 
@@ -47,7 +47,7 @@
           WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
         <RegistryValue
-          Root="HKCU"
+          Root="HKLM"
           Key="Software\GarantieExpress"
           Name="Installed"
           Type="integer"

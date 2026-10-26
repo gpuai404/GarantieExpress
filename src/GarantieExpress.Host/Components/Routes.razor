@@ -8,12 +8,7 @@
 
 @if (_initialized)
 {
-    @if (Updates.Status is
-        { IsUpdateAvailable: true, IsUpdateRequired: true, RequiresMajorUpgrade: true })
-    {
-        <MajorVersionError Refreshing="_refreshing" OnRefresh="RefreshUpdatesAsync" />
-    }
-    else if (Updates.Status is { IsUpdateAvailable: true, IsUpdateRequired: true } requiredUpdate)
+    @if (Updates.Status is { IsUpdateAvailable: true, IsUpdateRequired: true } requiredUpdate)
     {
         <CriticalUpdate Status="requiredUpdate" />
     }
@@ -45,7 +40,6 @@ else
 
 @code {
     private bool _initialized;
-    private bool _refreshing;
 
     protected override void OnInitialized() => Updates.StatusChanged += OnUpdateStatusChanged;
 
@@ -56,21 +50,6 @@ else
         await Localization.InitializeAsync();
         _initialized = true;
         StateHasChanged();
-    }
-
-    private async Task RefreshUpdatesAsync()
-    {
-        if (_refreshing) return;
-
-        _refreshing = true;
-        try
-        {
-            await Updates.CheckAsync();
-        }
-        finally
-        {
-            _refreshing = false;
-        }
     }
 
     private void OnUpdateStatusChanged() => _ = InvokeAsync(StateHasChanged);

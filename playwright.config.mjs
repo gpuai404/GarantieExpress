@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { resolve } from "node:path";
 
-const dataDirectory = JSON.stringify(resolve("test-results/e2e-data"));
+const dataDirectory = resolve("test-results/e2e-data");
 
 export default defineConfig({
     testDir: "./tests/e2e",
@@ -20,7 +20,14 @@ export default defineConfig({
         { name: "mobile-chromium", use: { ...devices["Pixel 7"] } }
     ],
     webServer: {
-        command: `ASPNETCORE_ENVIRONMENT=Development GarantieExpress__Url=http://127.0.0.1:5268 GarantieExpress__LaunchBrowser=false GarantieExpress__DataDirectory=${dataDirectory} dotnet run --project src/GarantieExpress.Host/GarantieExpress.Host.csproj --configuration Release --no-launch-profile`,
+        command: "dotnet run --project src/GarantieExpress.Host/GarantieExpress.Host.csproj --configuration Release --no-launch-profile",
+        env: {
+            ASPNETCORE_ENVIRONMENT: "Development",
+            GarantieExpress__Url: "http://127.0.0.1:5268",
+            GarantieExpress__LaunchBrowser: "false",
+            GarantieExpress__DataDirectory: dataDirectory,
+            GarantieExpress__Updates__ApiUrl: ""
+        },
         url: "http://127.0.0.1:5268",
         reuseExistingServer: false,
         timeout: 120_000

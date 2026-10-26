@@ -6,6 +6,8 @@ namespace GarantieExpress.Infrastructure.Persistence.Payloads;
 
 internal sealed class DraftWarrantyPayload
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Id { get; set; }
     public WarrantyServiceType ServiceType { get; set; } = WarrantyServiceType.Sale;
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? RepairNote { get; set; }
@@ -30,6 +32,7 @@ internal static class DraftWarrantyPayloadMapper
 
         return new DraftWarranty
         {
+            Id = document.Id ?? string.Empty,
             Version = version,
             ServiceType = document.ServiceType,
             RepairNote = document.RepairNote,
@@ -51,6 +54,7 @@ internal static class DraftWarrantyPayloadMapper
 
         return new DraftWarrantyPayload
         {
+            Id = string.IsNullOrEmpty(draft.Id) ? null : draft.Id,
             ServiceType = draft.ServiceType,
             RepairNote = draft.RepairNote,
             CategoryKey = draft.CategoryKey,

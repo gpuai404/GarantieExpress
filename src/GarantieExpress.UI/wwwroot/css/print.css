@@ -10,26 +10,39 @@ body.garantie-express-measuring-print .warranty-print-target {
 body.garantie-express-measuring-print .preview-viewport { padding: 0 !important; overflow: visible !important; }
 body.garantie-express-measuring-print .preview-canvas { width: auto !important; height: auto !important; transform: none !important; }
 body.garantie-express-measuring-print .preview-canvas .warranty-document { zoom: 1 !important; }
+.garantie-express-print-root { display: none; }
 
 @media print {
-    html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-    body.garantie-express-printing * { visibility: hidden !important; }
-    body.garantie-express-printing .warranty-print-target,
-    body.garantie-express-printing .warranty-print-target * { visibility: visible !important; }
-    body.garantie-express-printing .warranty-print-target {
-        position: fixed !important;
-        inset: 0 auto auto 0 !important;
-        width: auto !important;
-        overflow: visible !important;
-        background: transparent !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        background: white !important;
     }
-    body.garantie-express-printing .preview-toolbar { display: none !important; }
-    body.garantie-express-printing .preview-viewport { padding: 0 !important; overflow: visible !important; }
-    body.garantie-express-printing .preview-canvas { width: auto !important; height: auto !important; transform: none !important; }
-    body.garantie-express-printing .preview-canvas .warranty-document { zoom: 1 !important; }
+    body.garantie-express-printing > :not(.garantie-express-print-root) { display: none !important; }
+    body.garantie-express-printing .garantie-express-print-root {
+        display: grid !important;
+        place-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        background: transparent !important;
+        break-before: avoid !important;
+        break-after: avoid !important;
+        page-break-before: avoid !important;
+        page-break-after: avoid !important;
+    }
+    body.garantie-express-printing .garantie-express-print-root .warranty-document {
+        flex: none !important;
+        margin: 0 !important;
+        zoom: 1 !important;
+        transform: scale(var(--print-document-scale, 1)) !important;
+        transform-origin: center !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
 
     body.garantie-express-ink-saver .warranty-document {
         --secondary: var(--primary) !important;

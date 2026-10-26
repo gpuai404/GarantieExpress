@@ -8,7 +8,6 @@ public sealed record CustomCategoryInput(
     CategoryIdentifierMode IdentifierMode,
     int DefaultDurationMonths,
     string? TermsOverride,
-    bool ShowInBar,
     IReadOnlyDictionary<IllustrationVariant, string> Svgs,
     long ExpectedVersion = 0)
 {

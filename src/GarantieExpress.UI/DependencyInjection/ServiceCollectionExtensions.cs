@@ -27,11 +27,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CustomCategoryDraftFactory>();
         services.AddScoped<WarrantyDisplayModelBuilder>();
         services.AddScoped<WarrantyPrintCoordinator>();
-        services.AddScoped<WarrantyIssueRecoveryCoordinator>();
         services.AddScoped<PendingChangesCoordinator>();
-        services.AddTransient<IssueDraftCoordinator>();
-        services.AddTransient<IssueRenderCoordinator>();
-        services.AddTransient<IssueWorkflow>();
+        services.AddScoped<IssueWorkflowFactory>();
         services.AddSingleton<ThemePresentation>();
         services.AddSingleton<TemplateRegistry>();
         services.AddSingleton<ITemplateKeyResolver>(provider => provider.GetRequiredService<TemplateRegistry>());

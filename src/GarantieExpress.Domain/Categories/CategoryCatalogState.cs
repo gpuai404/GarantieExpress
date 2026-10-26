@@ -40,9 +40,6 @@ public sealed record CategoryCatalogState
     public CategoryCatalogState Unarchive() =>
         new(isArchived: false, showInBar: false, sortOrder: SortOrder, version: Version);
 
-    public DomainResult<CategoryCatalogState, CategoryError> SetBarVisibility(bool showInBar) =>
-        Create(IsArchived, showInBar, SortOrder, Version);
-
     public DomainResult<CategoryCatalogState, CategoryError> WithVersion(long version) =>
         Create(IsArchived, ShowInBar, SortOrder, version);
 

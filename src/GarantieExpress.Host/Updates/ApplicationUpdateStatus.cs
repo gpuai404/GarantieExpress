@@ -5,7 +5,6 @@ public sealed record ApplicationUpdateStatus(
     string? LatestVersion = null,
     string? MinimumSupportedVersion = null,
     bool IsUpdateRequired = false,
-    bool RequiresMajorUpgrade = false,
     Uri? DownloadUri = null,
     string? Message = null)
 {

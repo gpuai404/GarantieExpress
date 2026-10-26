@@ -28,9 +28,4 @@ public sealed class CategorySelection
         .ThenBy(category => category.Key, StringComparer.Ordinal)
         .Take(MaximumBarItems)
         .ToList();
-
-    public bool CanShowInBar(string? excludedKey = null) => Items.Count(category =>
-        category.ShowInBar
-        && !category.IsArchived
-        && !string.Equals(category.Key, excludedKey, StringComparison.Ordinal)) < MaximumBarItems;
 }

@@ -33,6 +33,7 @@ internal static class WarrantyIssueInputHasher
             DurationMonths = issuance.Duration.Months,
             issuance.TemplateKey,
             issuance.IssuedAt,
+            DraftId = sourceDraft.Id,
             DraftVersion = sourceDraft.Version,
             SnapshotId = snapshot.Id
         };

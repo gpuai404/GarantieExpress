@@ -57,14 +57,6 @@ public sealed class CategoryCatalogService(
             return CategoryFailure("Storage.StaleCategory", "Categories_EditConflict");
         }
 
-        if (input.ShowInBar && !new CategorySelection(currentCatalog).CanShowInBar(existing?.Key))
-        {
-            return CategoryFailure(
-                "Category.BarLimit",
-                "Categories_BarLimit",
-                nameof(CustomCategoryInput.ShowInBar));
-        }
-
         return await BuildFields(input.IdentifierMode).Match(
             fields =>
             {
@@ -76,7 +68,7 @@ public sealed class CategoryCatalogService(
                         input.DefaultDurationMonths,
                         input.IdentifierMode,
                         input.TermsOverride,
-                        input.ShowInBar,
+                        false,
                         input.Svgs,
                         fields)
                     : existing.UpdateCustom(
@@ -84,7 +76,7 @@ public sealed class CategoryCatalogService(
                         input.DefaultDurationMonths,
                         input.IdentifierMode,
                         input.TermsOverride,
-                        input.ShowInBar,
+                        existing.ShowInBar,
                         input.Svgs,
                         fields);
 
@@ -106,31 +98,6 @@ public sealed class CategoryCatalogService(
         return PersistStateAsync(
             isArchived ? category.Archive() : category.Unarchive(),
             cancellationToken);
-    }
-
-    public Task<OperationResult> SetBarVisibilityAsync(
-        Category category,
-        bool showInBar,
-        IReadOnlyList<Category> currentCatalog,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(category);
-        ArgumentNullException.ThrowIfNull(currentCatalog);
-
-        if (showInBar && !new CategorySelection(currentCatalog).CanShowInBar(category.Key))
-        {
-            return Task.FromResult(OperationResult.Failure(new OperationError(
-                "Category.BarLimit",
-                localization["Categories_BarLimit"],
-                nameof(Category.ShowInBar))));
-        }
-
-        return category.SetBarVisibility(showInBar).Match(
-            updated => PersistStateAsync(updated, cancellationToken),
-            _ => Task.FromResult(OperationResult.Failure(new OperationError(
-                "Category.ArchivedCannotBeShown",
-                localization["Categories_ArchivedCannotBeShown"],
-                nameof(Category.ShowInBar)))));
     }
 
     private Task<OperationResult<Category>> SanitizeAndPersistAsync(
@@ -175,10 +142,6 @@ public sealed class CategoryCatalogService(
             OperationResult<Category>.Success,
             error => OperationResult<Category>.Failure(error.Code switch
             {
-                "Category.BarLimit" => new OperationError(
-                    error.Code,
-                    localization["Categories_BarLimit"],
-                    nameof(CustomCategoryInput.ShowInBar)),
                 "Storage.StaleCategory" => new OperationError(
                     error.Code,
                     localization["Categories_EditConflict"]),
@@ -193,13 +156,7 @@ public sealed class CategoryCatalogService(
         var result = await repository.SaveAsync(category, cancellationToken);
         return result.Match(
             _ => OperationResult.Success(),
-            error => OperationResult.Failure(
-                error.Code == "Category.BarLimit"
-                    ? new OperationError(
-                        error.Code,
-                        localization["Categories_BarLimit"],
-                        nameof(Category.ShowInBar))
-                    : error));
+            OperationResult.Failure);
     }
 
     private DomainResult<IReadOnlyList<FieldSpec>, FieldSpecError> BuildFields(

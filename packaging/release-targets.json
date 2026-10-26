@@ -5,14 +5,10 @@
   "browsers": {
     "policy": "Current stable version",
     "windows": [
-      "Microsoft Edge",
-      "Google Chrome",
-      "Mozilla Firefox"
+      "Chromium"
     ],
     "macOS": [
-      "Apple Safari",
-      "Google Chrome",
-      "Mozilla Firefox"
+      "Chromium"
     ]
   },
   "targets": [

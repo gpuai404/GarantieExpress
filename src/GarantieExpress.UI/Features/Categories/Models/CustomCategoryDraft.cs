@@ -11,7 +11,6 @@ public sealed class CustomCategoryDraft
     public CategoryIdentifierMode IdentifierMode { get; set; } = CategoryIdentifierMode.SerialNumber;
     public int DefaultDurationMonths { get; set; } = 12;
     public string? TermsOverride { get; set; }
-    public bool ShowInBar { get; set; }
     public Dictionary<IllustrationVariant, string> Svgs { get; set; } = [];
 
     public bool IsEditing => !string.IsNullOrWhiteSpace(ExistingKey);
@@ -22,7 +21,6 @@ public sealed class CustomCategoryDraft
         IdentifierMode,
         DefaultDurationMonths,
         TermsOverride,
-        ShowInBar,
         Svgs.ToDictionary(item => item.Key, item => item.Value),
         ExpectedVersion);
 }

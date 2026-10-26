@@ -187,7 +187,12 @@
 
     private async Task OnPurchaseDateChanged(ChangeEventArgs args)
     {
-        if (DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", out var value)) Form.PurchaseDate = value;
+        Form.PurchaseDate = DateOnly.TryParseExact(
+            args.Value?.ToString(),
+            "yyyy-MM-dd",
+            out var value)
+            ? value
+            : default;
         await FormChanged.InvokeAsync(nameof(Form.PurchaseDate));
     }
 

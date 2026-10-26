@@ -10,10 +10,11 @@ using GarantieExpress.Domain;
 using GarantieExpress.UI.Features.Categories.Models;
 using GarantieExpress.UI.Features.Settings;
 using GarantieExpress.UI.Localization;
+using GarantieExpress.UI.Services;
 
 namespace GarantieExpress.UI.Features.Categories;
 
-public partial class Categories
+public partial class Categories : IDisposable
 {
     [Inject] private ILocalizationService Localization { get; set; } = null!;
     [Inject] private CategoryCatalogService CategoryCatalog { get; set; } = null!;
@@ -22,6 +23,7 @@ public partial class Categories
     [Inject] private SvgSanitizer SvgSanitizer { get; set; } = null!;
     [Inject] private WarrantyDurationFormatter DurationFormatter { get; set; } = null!;
     [Inject] private ThemePresentation ThemePresentation { get; set; } = null!;
+    [Inject] private PendingChangesCoordinator PendingChanges { get; set; } = null!;
 
     private readonly Dictionary<IllustrationVariant, string> _uploadErrors = [];
     private List<Category> _categories = [];
@@ -32,12 +34,14 @@ public partial class Categories
     private bool _failed;
     private bool _useThemeColor = true;
     private string? _message;
+    private IDisposable? _pendingChangesRegistration;
 
     private string KeyPreview => _draft?.ExistingKey
         ?? CategoryKeyGenerator.Generate(_draft?.Name ?? string.Empty, _categories.Select(category => category.Key));
 
     protected override async Task OnInitializedAsync()
     {
+        _pendingChangesRegistration = PendingChanges.Register(PrepareToLeaveAsync);
         var settingsTask = Settings.LoadAsync();
         var categoriesTask = CategoryCatalog.LoadAsync();
         await Task.WhenAll(settingsTask, categoriesTask);
@@ -162,16 +166,6 @@ public partial class Categories
         finally { _saving = false; }
     }
 
-    private async Task ToggleBarAsync((Category Category, ChangeEventArgs Args) request)
-    {
-        var (category, args) = request;
-        var show = args.Value is bool value && value;
-        var result = await CategoryCatalog.SetBarVisibilityAsync(category, show, _categories);
-        var succeeded = result is OperationResult.Succeeded;
-        if (succeeded) await RefreshAfterChangeAsync(Localization["Categories_BarUpdated"]);
-        else SetMessage(((OperationResult.Failed)result).Error, true);
-    }
-
     private async Task SetArchivedAsync((Category Category, bool Archived) request)
     {
         var (category, archived) = request;
@@ -218,4 +212,13 @@ public partial class Categories
         _message = message;
         _failed = failed;
     }
+
+    private Task<OperationResult> PrepareToLeaveAsync() => Task.FromResult(
+        _draft is not null || _saving
+            ? OperationResult.Failure(new OperationError(
+                "UI.UnsavedChanges",
+                Localization["PendingChanges_Unsaved"]))
+            : OperationResult.Success());
+
+    public void Dispose() => _pendingChangesRegistration?.Dispose();
 }

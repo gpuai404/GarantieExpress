@@ -1,4 +1,5 @@
 @page "/producten"
+@implements IDisposable
 
 <PageTitle>@Localization["Products_Title"] · GarantieExpress</PageTitle>
 <div class="products-page">
@@ -10,7 +11,7 @@
         </div>
         @if (!_loading && !_loadFailed)
         {
-            <button type="button" class="button primary" @onclick="StartNew">@Localization["Products_New"]</button>
+            <button type="button" class="button primary" disabled="@(_editing || _saving)" @onclick="StartNew">@Localization["Products_New"]</button>
         }
     </div>
 
@@ -35,7 +36,7 @@
                 <div class="section-heading">
                     <span>01</span>
                     <div>
-                        <h2>@(_editingId is null ? Localization["Products_Create"] : Localization["Products_Edit"])</h2>
+                        <h2>@(_editingProduct is null ? Localization["Products_Create"] : Localization["Products_Edit"])</h2>
                         <p>@Localization["Products_Intro"]</p>
                     </div>
                 </div>
@@ -68,7 +69,7 @@
                             {
                                 <option value="@duration">@DurationFormatter.FormatDuration(duration)</option>
                             }
-                            @if (_editingId is not null && !_offeredDurations.Contains(_durationMonths))
+                            @if (_editingProduct is not null && !_offeredDurations.Contains(_durationMonths))
                             {
                                 <option value="@_durationMonths">@DurationFormatter.FormatDuration(_durationMonths)</option>
                             }
@@ -98,7 +99,7 @@
                             <p>@CategoryName(product.CategoryKey)</p>
                             <strong>€ @((product.PriceCents / 100m).ToString("0.00")) · @DurationFormatter.FormatDuration(product.DurationMonths)</strong>
                         </div>
-                        @if (_pendingDeleteId == product.Id)
+                        @if (_pendingDeleteProduct?.Id == product.Id)
                         {
                             <div class="product-actions" role="group" aria-label="@Localization["Products_DeleteConfirm"]">
                                 <span>@Localization["Products_DeleteConfirm"]</span>
@@ -109,8 +110,8 @@
                         else
                         {
                             <div class="product-actions">
-                                <button type="button" class="button secondary" @onclick="() => StartEdit(product)">@Localization["Categories_EditAction"]</button>
-                                <button type="button" class="text-button" @onclick="() => RequestDelete(product)">@Localization["Products_Delete"]</button>
+                                <button type="button" class="button secondary" disabled="@(_editing || _saving)" @onclick="() => StartEdit(product)">@Localization["Categories_EditAction"]</button>
+                                <button type="button" class="text-button" disabled="@(_editing || _saving)" @onclick="() => RequestDelete(product)">@Localization["Products_Delete"]</button>
                             </div>
                         }
                     </article>
@@ -127,6 +128,7 @@
     [Inject] private CategoryDisplayResolver CategoryDisplay { get; set; } = null!;
     [Inject] private StoreSettingsService Settings { get; set; } = null!;
     [Inject] private WarrantyDurationFormatter DurationFormatter { get; set; } = null!;
+    [Inject] private PendingChangesCoordinator PendingChanges { get; set; } = null!;
 
     private List<Product> _products = [];
     private List<Category> _categories = [];
@@ -136,16 +138,18 @@
     private bool _editing;
     private bool _saving;
     private bool _failed;
-    private Guid? _editingId;
-    private Guid? _pendingDeleteId;
+    private Product? _editingProduct;
+    private Product? _pendingDeleteProduct;
     private string _brandModel = string.Empty;
     private string _categoryKey = string.Empty;
     private decimal? _price;
     private int _durationMonths;
     private string? _message;
+    private IDisposable? _pendingChangesRegistration;
 
     protected override async Task OnInitializedAsync()
     {
+        _pendingChangesRegistration = PendingChanges.Register(PrepareToLeaveAsync);
         var productsTask = Products.LoadAsync();
         var categoriesTask = CategoryCatalog.LoadAsync(includeArchived: true);
         var settingsTask = Settings.LoadAsync();
@@ -178,32 +182,32 @@
 
     private void StartNew()
     {
-        _editingId = null;
+        _editingProduct = null;
         _brandModel = string.Empty;
         _categoryKey = _categories.FirstOrDefault(category => !category.IsArchived)?.Key ?? string.Empty;
         _price = null;
         _durationMonths = _offeredDurations.FirstOrDefault(12);
         _editing = true;
-        _pendingDeleteId = null;
+        _pendingDeleteProduct = null;
         SetMessage(null, false);
     }
 
     private void StartEdit(Product product)
     {
-        _editingId = product.Id;
+        _editingProduct = product;
         _brandModel = product.BrandModel;
         _categoryKey = product.CategoryKey;
         _price = product.PriceCents / 100m;
         _durationMonths = product.DurationMonths;
         _editing = true;
-        _pendingDeleteId = null;
+        _pendingDeleteProduct = null;
         SetMessage(null, false);
     }
 
     private void CancelEdit()
     {
         _editing = false;
-        _editingId = null;
+        _editingProduct = null;
         SetMessage(null, false);
     }
 
@@ -225,9 +229,15 @@
                 _categoryKey,
                 validPrice.Value.Cents,
                 _durationMonths,
-                _editingId);
+                _editingProduct);
             if (result is OperationResult<Product>.Failed failed)
             {
+                if (failed.Details.Code == "Storage.StaleProduct")
+                {
+                    await RefreshAfterConflictAsync(failed.Error);
+                    return;
+                }
+
                 SetMessage(failed.Error, true);
                 return;
             }
@@ -238,7 +248,7 @@
             else _products[existingIndex] = product;
             _products = _products.OrderBy(item => item.BrandModel, StringComparer.CurrentCultureIgnoreCase).ToList();
             _editing = false;
-            _editingId = null;
+            _editingProduct = null;
             SetMessage(Localization["Products_Saved"], false);
         }
         finally
@@ -250,28 +260,34 @@
     private void RequestDelete(Product product)
     {
         _editing = false;
-        _editingId = null;
-        _pendingDeleteId = product.Id;
+        _editingProduct = null;
+        _pendingDeleteProduct = product;
         SetMessage(null, false);
     }
 
-    private void CancelDelete() => _pendingDeleteId = null;
+    private void CancelDelete() => _pendingDeleteProduct = null;
 
     private async Task ConfirmDeleteAsync()
     {
-        if (_pendingDeleteId is not Guid id || _saving) return;
+        if (_pendingDeleteProduct is not { } product || _saving) return;
         _saving = true;
         try
         {
-            var result = await Products.DeleteAsync(id);
+            var result = await Products.DeleteAsync(product);
             if (result is OperationResult.Failed failed)
             {
+                if (failed.Details.Code == "Storage.StaleProduct")
+                {
+                    await RefreshAfterConflictAsync(failed.Error);
+                    return;
+                }
+
                 SetMessage(failed.Error, true);
                 return;
             }
 
-            _products.RemoveAll(product => product.Id == id);
-            _pendingDeleteId = null;
+            _products.RemoveAll(item => item.Id == product.Id);
+            _pendingDeleteProduct = null;
             SetMessage(Localization["Products_Deleted"], false);
         }
         finally
@@ -285,9 +301,32 @@
             ? CategoryDisplay.DisplayName(category)
             : key;
 
+    private async Task RefreshAfterConflictAsync(string message)
+    {
+        var result = await Products.LoadAsync();
+        if (result is OperationResult<IReadOnlyList<Product>>.Succeeded succeeded)
+        {
+            _products = succeeded.Value.ToList();
+            _editing = false;
+            _editingProduct = null;
+            _pendingDeleteProduct = null;
+        }
+
+        SetMessage(message, true);
+    }
+
     private void SetMessage(string? message, bool failed)
     {
         _message = message;
         _failed = failed;
     }
+
+    private Task<OperationResult> PrepareToLeaveAsync() => Task.FromResult(
+        _editing || _saving
+            ? OperationResult.Failure(new OperationError(
+                "UI.UnsavedChanges",
+                Localization["PendingChanges_Unsaved"]))
+            : OperationResult.Success());
+
+    public void Dispose() => _pendingChangesRegistration?.Dispose();
 }

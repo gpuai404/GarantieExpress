@@ -17,12 +17,17 @@ public sealed class ProductCatalogService(
         string? categoryKey,
         long priceCents,
         int durationMonths,
-        Guid? id = null,
+        Product? expected = null,
         CancellationToken cancellationToken = default)
     {
-        var productResult = Product.Create(brandModel, categoryKey, priceCents, durationMonths, id);
+        var productResult = Product.Create(
+            brandModel,
+            categoryKey,
+            priceCents,
+            durationMonths,
+            expected?.Id);
         return await productResult.Match(
-            product => SaveValidatedAsync(product, cancellationToken),
+            product => SaveValidatedAsync(product, expected, cancellationToken),
             error => Task.FromResult(OperationResult<Product>.Failure(new OperationError(
                 $"Product.{error}",
                 localization[error switch
@@ -37,6 +42,7 @@ public sealed class ProductCatalogService(
 
     private async Task<OperationResult<Product>> SaveValidatedAsync(
         Product product,
+        Product? expected,
         CancellationToken cancellationToken)
     {
         var currentProducts = await repository.GetAllAsync(cancellationToken);
@@ -52,11 +58,26 @@ public sealed class ProductCatalogService(
                 localization["Products_Duplicate"]));
         }
 
-        return await repository.SaveAsync(product, cancellationToken);
+        var saved = expected is null
+            ? await repository.AddAsync(product, cancellationToken)
+            : await repository.UpdateAsync(product, expected, cancellationToken);
+        return saved is OperationResult<Product>.Failed { Details.Code: "Storage.StaleProduct" }
+            ? OperationResult<Product>.Failure(new OperationError(
+                "Storage.StaleProduct",
+                localization["Products_EditConflict"]))
+            : saved;
     }
 
-    public Task<OperationResult> DeleteAsync(
-        Guid id,
-        CancellationToken cancellationToken = default) =>
-        repository.DeleteAsync(id, cancellationToken);
+    public async Task<OperationResult> DeleteAsync(
+        Product expected,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        var deleted = await repository.DeleteAsync(expected, cancellationToken);
+        return deleted is OperationResult.Failed { Details.Code: "Storage.StaleProduct" }
+            ? OperationResult.Failure(new OperationError(
+                "Storage.StaleProduct",
+                localization["Products_EditConflict"]))
+            : deleted;
+    }
 }

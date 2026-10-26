@@ -17,6 +17,7 @@ public sealed class IssueDraftCoordinator(
     private Task _scheduledTask = Task.CompletedTask;
     private Task? _disposeTask;
     private DraftWarranty? _pendingDraft;
+    private string _draftId = string.Empty;
     private long _draftVersion;
     private bool _disposed;
 
@@ -30,7 +31,10 @@ public sealed class IssueDraftCoordinator(
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (draft is not null)
+        {
+            _draftId = draft.Id;
             _draftVersion = draft.Version;
+        }
 
         Failed = warning is not null;
         Status = warning?.Message ?? localization[
@@ -41,7 +45,7 @@ public sealed class IssueDraftCoordinator(
     public DraftWarranty Track(DraftWarranty draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
-        return draft with { Version = _draftVersion };
+        return draft with { Id = _draftId, Version = _draftVersion };
     }
 
     public void Schedule(DraftWarranty draft)
@@ -79,6 +83,7 @@ public sealed class IssueDraftCoordinator(
         try
         {
             var result = await drafts.ClearAsync(
+                _draftId,
                 _draftVersion,
                 cancellationToken);
             if (result is OperationResult.Failed failed)
@@ -157,6 +162,7 @@ public sealed class IssueDraftCoordinator(
             Failed = result is OperationResult<DraftWarranty>.Failed;
             if (result is OperationResult<DraftWarranty>.Succeeded saved)
             {
+                _draftId = saved.Value.Id;
                 _draftVersion = saved.Value.Version;
                 if (ReferenceEquals(_pendingDraft, draft)) _pendingDraft = null;
                 Status = localization[_pendingDraft is null ? "Issue_DraftSaved" : "Issue_DraftPending"];
@@ -176,6 +182,7 @@ public sealed class IssueDraftCoordinator(
 
     private void ResetIdentity()
     {
+        _draftId = string.Empty;
         _draftVersion = 0;
     }
 

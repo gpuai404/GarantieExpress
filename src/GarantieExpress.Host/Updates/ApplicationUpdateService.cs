@@ -118,7 +118,6 @@ internal sealed class ApplicationUpdateService(
             Normalize(latestVersion),
             Normalize(minimumSupportedVersion),
             installedVersion < minimumSupportedVersion,
-            installedVersion.Major < minimumSupportedVersion.Major,
             TrustedDownloadUri,
             message);
         return true;

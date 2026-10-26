@@ -4,6 +4,7 @@ namespace GarantieExpress.Application.Warranties.Drafts;
 
 public sealed record DraftWarranty
 {
+    public string Id { get; init; } = string.Empty;
     public long Version { get; init; }
     public WarrantyServiceType ServiceType { get; init; } = WarrantyServiceType.Sale;
     public string? RepairNote { get; init; }
@@ -16,4 +17,17 @@ public sealed record DraftWarranty
     public int DurationMonths { get; init; } = 24;
     public string TemplateKey { get; init; } = "a4-reference";
     public DateTimeOffset SavedAt { get; init; }
+
+    public bool HasValidIdentity => IsValidIdentity(Id, Version);
+
+    public static bool IsValidIdentity(string? id, long version) =>
+        version >= 0
+        && id is not null
+        && (version == 0
+            ? id.Length == 0
+            : id.Length == 0 || IsCanonicalId(id));
+
+    private static bool IsCanonicalId(string id) =>
+        Guid.TryParseExact(id, "N", out var parsed)
+        && string.Equals(parsed.ToString("N"), id, StringComparison.Ordinal);
 }

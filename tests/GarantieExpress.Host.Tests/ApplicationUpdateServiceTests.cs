@@ -30,7 +30,6 @@ public sealed class ApplicationUpdateServiceTests
         Assert.True(valid);
         Assert.True(status.IsUpdateAvailable);
         Assert.True(status.IsUpdateRequired);
-        Assert.False(status.RequiresMajorUpgrade);
         Assert.Equal("1.0.0", status.InstalledVersion);
         Assert.Equal("1.1.0", status.LatestVersion);
         Assert.Equal("1.0.1", status.MinimumSupportedVersion);
@@ -56,11 +55,10 @@ public sealed class ApplicationUpdateServiceTests
         Assert.True(valid);
         Assert.True(status.IsUpdateAvailable);
         Assert.False(status.IsUpdateRequired);
-        Assert.False(status.RequiresMajorUpgrade);
     }
 
     [Fact]
-    public void TryEvaluate_marks_a_required_cross_major_update_as_a_major_upgrade()
+    public void TryEvaluate_requires_a_cross_major_update_below_the_supported_floor()
     {
         var manifest = new ApplicationUpdateService.UpdateManifest(
             "2.1.0",
@@ -75,7 +73,6 @@ public sealed class ApplicationUpdateServiceTests
 
         Assert.True(valid);
         Assert.True(status.IsUpdateRequired);
-        Assert.True(status.RequiresMajorUpgrade);
     }
 
     [Fact]

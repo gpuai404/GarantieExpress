@@ -9,7 +9,7 @@
 }
 else if (_settings is not null)
 {
-    <div class="settings-form">
+    <div class="settings-form" @oninput="MarkDirty" @onchange="MarkDirty">
         <EditForm Model="_settings" OnValidSubmit="SaveAsync" class="settings-form">
             <DataAnnotationsValidator />
             <ValidationSummary />
@@ -40,6 +40,7 @@ else if (_settings is not null)
 
             <div class="form-actions">
                 <button class="button primary" type="submit" disabled="@(_durationError is not null || _saving)">@(_saving ? Localization["Settings_Saving"] : Localization["Settings_Save"])</button>
+                <button class="button secondary" type="button" disabled="@(!_dirty || _saving)" @onclick="DiscardChanges">@Localization["Settings_Discard"]</button>
                 @if (_message is not null) { <p role="status" class="save-message @(_saveFailed ? "error" : "success")">@_message</p> }
             </div>
         </EditForm>

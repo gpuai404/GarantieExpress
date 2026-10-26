@@ -7,7 +7,7 @@
     <div><p class="eyebrow">@Localization["Categories_Eyebrow"]</p><h1>@Localization["Categories_Title"]</h1><p>@Localization["Categories_Intro"]</p></div>
     @if (!_loading && _settings is not null)
     {
-        <button type="button" class="button primary" @onclick="StartNew">@Localization["Categories_New"]</button>
+        <button type="button" class="button primary" disabled="@(_draft is not null || _saving)" @onclick="StartNew">@Localization["Categories_New"]</button>
     }
 </div>
 
@@ -58,7 +58,6 @@ else
 
                     <label>@Localization["Categories_TermsOverride"]<textarea @bind="_draft.TermsOverride" rows="4"></textarea></label>
                     <p class="field-hint">@Localization["Categories_TermsHint"]</p>
-                    <label class="checkbox-label"><input type="checkbox" @bind="_draft.ShowInBar" /> @Localization["Categories_ShowInBar"]</label>
                     <label class="checkbox-label"><input type="checkbox" @bind="_useThemeColor" /> @Localization["Categories_UseThemeColor"]</label>
                     <p class="field-hint">@Localization["Categories_ThemeColorHint"]</p>
                 </div>
@@ -111,9 +110,9 @@ else
 
     <CategoryCatalogGrid
         Categories="@_categories"
+        EditorOpen="@(_draft is not null || _saving)"
         EditRequested="@StartEdit"
         DuplicateRequested="@StartDuplicate"
-        ToggleBar="@ToggleBarAsync"
         SetArchived="@SetArchivedAsync" />
 }
 </div>

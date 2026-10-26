@@ -16,7 +16,6 @@ public sealed record WarrantyDisplayModel(
     string Phone,
     string Vat,
     string CategoryName,
-    IReadOnlyList<string> CategoryBarItems,
     string IllustrationSvg,
     string BrandModel,
     string SerialLabel,

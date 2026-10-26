@@ -8,12 +8,14 @@ namespace GarantieExpress.UI.Features.Issue;
 public partial class Issue : IAsyncDisposable
 {
     [Inject] private ILocalizationService Localization { get; set; } = null!;
-    [Inject] private IssueWorkflow Workflow { get; set; } = null!;
+    [Inject] private IssueWorkflowFactory WorkflowFactory { get; set; } = null!;
     [Inject] private PendingChangesCoordinator PendingChanges { get; set; } = null!;
+    private IssueWorkflow Workflow { get; set; } = null!;
     private IDisposable? _pendingChangesRegistration;
 
     protected override async Task OnInitializedAsync()
     {
+        Workflow = WorkflowFactory.Create();
         Workflow.StateChanged += OnWorkflowStateChanged;
         _pendingChangesRegistration = PendingChanges.Register(Workflow.PrepareToLeaveAsync);
         await Workflow.InitializeAsync();

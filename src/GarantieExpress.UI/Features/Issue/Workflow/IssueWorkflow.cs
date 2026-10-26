@@ -103,7 +103,6 @@ public sealed class IssueWorkflow(
                 Settings!,
                 CurrentCategory,
                 ToDraft(),
-                Categories,
                 illustration: CurrentTemplate.Illustration);
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -215,12 +214,25 @@ public sealed class IssueWorkflow(
                 drafts.CompleteIssue();
                 IssueStatus = localization.Format("Issue_Issued", recovered.Warranty.Number);
                 IssueFailed = false;
-                await issueRecovery.CompleteAsync();
+                var cleanup = await issueRecovery.CompleteAsync();
+                if (cleanup is OperationResult.Failed recoveredCleanupFailure)
+                {
+                    IssueFailed = true;
+                    IssueStatus = recoveredCleanupFailure.Error;
+                }
+
                 NotifyStateChanged();
                 return;
             }
 
-            await issueRecovery.CompleteAsync();
+            var abandonedRequestCleanup = await issueRecovery.CompleteAsync();
+            if (abandonedRequestCleanup is OperationResult.Failed abandonedCleanupFailure)
+            {
+                IssueFailed = true;
+                IssueStatus = abandonedCleanupFailure.Error;
+                NotifyStateChanged();
+                return;
+            }
         }
 
         ClearingDraft = true;
@@ -233,7 +245,14 @@ public sealed class IssueWorkflow(
             Session.ReplaceForm(CreateDefaultForm(Settings!, Categories));
             IssuedResult = null;
             IssueStatus = null;
-            await issueRecovery.CompleteAsync();
+            var cleanup = await issueRecovery.CompleteAsync();
+            if (cleanup is OperationResult.Failed clearedDraftCleanupFailure)
+            {
+                IssueFailed = true;
+                IssueStatus = clearedDraftCleanupFailure.Error;
+                return;
+            }
+
             IssueFailed = false;
         }
         finally
@@ -277,6 +296,21 @@ public sealed class IssueWorkflow(
         {
             await drafts.WaitForIdleAsync();
             IssueFailed = false;
+
+            var preflightRender = await rendering.WaitForRenderAsync(NotifyStateChanged);
+            if (preflightRender is OperationResult.Failed preflightRenderFailure)
+            {
+                ApplyPrintResult(preflightRenderFailure);
+                return;
+            }
+
+            var preflightFit = await printer.CheckFitAsync();
+            if (preflightFit is OperationResult.Failed preflightFitFailure)
+            {
+                ApplyPrintResult(preflightFitFailure);
+                return;
+            }
+
             IssueStatus = localization["Issue_Saving"];
             NotifyStateChanged();
 
@@ -310,7 +344,12 @@ public sealed class IssueWorkflow(
             IssuedResult = issued;
             drafts.CompleteIssue();
             IssueStatus = localization.Format("Issue_Issued", issued.Warranty.Number);
-            await issueRecovery.CompleteAsync();
+            var cleanup = await issueRecovery.CompleteAsync();
+            if (cleanup is OperationResult.Failed issueCleanupFailure)
+            {
+                IssueFailed = true;
+                IssueStatus = issueCleanupFailure.Error;
+            }
             var rendered = await rendering.WaitForRenderAsync(NotifyStateChanged);
             if (rendered is OperationResult.Failed renderFailure)
                 ApplyPrintResult(renderFailure);
@@ -400,7 +439,12 @@ public sealed class IssueWorkflow(
         drafts.CompleteIssue();
         IssueFailed = false;
         IssueStatus = localization.Format("Issue_Issued", recovered.Warranty.Number);
-        await issueRecovery.CompleteAsync(cancellationToken);
+        var cleanup = await issueRecovery.CompleteAsync(cancellationToken);
+        if (cleanup is OperationResult.Failed recoveryCleanupFailure)
+        {
+            IssueFailed = true;
+            IssueStatus = recoveryCleanupFailure.Error;
+        }
     }
 
     private void RestoreIssuedForm()

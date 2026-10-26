@@ -7,10 +7,14 @@ public interface IProductRepository
 {
     Task<OperationResult<IReadOnlyList<Product>>> GetAllAsync(
         CancellationToken cancellationToken = default);
-    Task<OperationResult<Product>> SaveAsync(
+    Task<OperationResult<Product>> AddAsync(
         Product product,
         CancellationToken cancellationToken = default);
+    Task<OperationResult<Product>> UpdateAsync(
+        Product product,
+        Product expected,
+        CancellationToken cancellationToken = default);
     Task<OperationResult> DeleteAsync(
-        Guid id,
+        Product expected,
         CancellationToken cancellationToken = default);
 }

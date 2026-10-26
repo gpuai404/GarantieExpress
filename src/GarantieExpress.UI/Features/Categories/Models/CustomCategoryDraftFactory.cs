@@ -17,7 +17,6 @@ public sealed class CustomCategoryDraftFactory(
         IdentifierMode = category.IdentifierMode,
         DefaultDurationMonths = category.DefaultDurationsMonths.FirstOrDefault(12),
         TermsOverride = category.TermsOverride,
-        ShowInBar = category.ShowInBar,
         Svgs = category.Svgs.ToDictionary(item => item.Key, item => item.Value)
     };
 
@@ -27,7 +26,6 @@ public sealed class CustomCategoryDraftFactory(
         IdentifierMode = category.IdentifierMode,
         DefaultDurationMonths = category.DefaultDurationsMonths.FirstOrDefault(12),
         TermsOverride = category.TermsOverride,
-        ShowInBar = false,
         Svgs = category.Svgs.ToDictionary(item => item.Key, item => item.Value)
     };
 }

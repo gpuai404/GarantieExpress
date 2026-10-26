@@ -38,7 +38,7 @@ public sealed class LocalizedValidationTests
         var results = form.Validate(CreateContext(form, localization)).ToList();
 
         var result = Assert.Single(results);
-        Assert.Equal("The purchase date cannot be in the future.", result.ErrorMessage);
+        Assert.Equal("Enter a purchase date that is not in the future.", result.ErrorMessage);
         Assert.Equal([nameof(form.PurchaseDate)], result.MemberNames);
     }
 

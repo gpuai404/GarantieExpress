@@ -18,7 +18,7 @@ public sealed class ProductCatalogServiceTests
         var created = Assert.IsType<OperationResult<Product>.Succeeded>(
             await service.SaveAsync("Acme Phone", "smartphone", 49_900, 24)).Value;
         var updated = Assert.IsType<OperationResult<Product>.Succeeded>(
-            await service.SaveAsync("Acme Phone Plus", "smartphone", 59_900, 36, created.Id)).Value;
+            await service.SaveAsync("Acme Phone Plus", "smartphone", 59_900, 36, created)).Value;
 
         Assert.Equal(created.Id, updated.Id);
         Assert.Equal("Acme Phone Plus", updated.BrandModel);
@@ -61,20 +61,29 @@ public sealed class ProductCatalogServiceTests
             CancellationToken cancellationToken = default) =>
             Task.FromResult(OperationResult<IReadOnlyList<Product>>.Success(Products.ToList()));
 
-        public Task<OperationResult<Product>> SaveAsync(
+        public Task<OperationResult<Product>> AddAsync(
             Product product,
             CancellationToken cancellationToken = default)
         {
-            Products.RemoveAll(existing => existing.Id == product.Id);
+            Products.Add(product);
+            return Task.FromResult(OperationResult<Product>.Success(product));
+        }
+
+        public Task<OperationResult<Product>> UpdateAsync(
+            Product product,
+            Product expected,
+            CancellationToken cancellationToken = default)
+        {
+            Products.Remove(expected);
             Products.Add(product);
             return Task.FromResult(OperationResult<Product>.Success(product));
         }
 
         public Task<OperationResult> DeleteAsync(
-            Guid id,
+            Product expected,
             CancellationToken cancellationToken = default)
         {
-            Products.RemoveAll(product => product.Id == id);
+            Products.Remove(expected);
             return Task.FromResult(OperationResult.Success());
         }
     }

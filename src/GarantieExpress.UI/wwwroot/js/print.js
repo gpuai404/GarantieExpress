@@ -3,6 +3,8 @@ function nextFrame() {
 }
 
 const defaultWarrantySelector = ".warranty-print-target .warranty-document";
+const paginationGuardMm = 1;
+const pageViewportGuardMm = 0.2;
 
 async function waitForDocumentAssets(element) {
     await document.fonts?.ready;
@@ -46,7 +48,32 @@ export async function warrantyFitsPage(targetSelector = defaultWarrantySelector)
     }
 }
 
+function isValidPageSize(widthMm, heightMm) {
+    return Number.isFinite(widthMm) && widthMm > paginationGuardMm * 2
+        && Number.isFinite(heightMm) && heightMm > paginationGuardMm * 2;
+}
+
+function createPrintRoot(documentElement, widthMm, heightMm) {
+    const printRoot = document.createElement("div");
+    printRoot.className = "garantie-express-print-root";
+    printRoot.setAttribute("aria-hidden", "true");
+    printRoot.style.width = `${widthMm - pageViewportGuardMm}mm`;
+    printRoot.style.height = `${heightMm - pageViewportGuardMm}mm`;
+    const scale = Math.min(
+        (widthMm - paginationGuardMm * 2) / widthMm,
+        (heightMm - paginationGuardMm * 2) / heightMm);
+    printRoot.style.setProperty("--print-document-scale", scale.toString());
+    printRoot.appendChild(documentElement.cloneNode(true));
+    document.body.appendChild(printRoot);
+    return printRoot;
+}
+
 export async function printWarranty(widthMm, heightMm, inkSaver, targetSelector = defaultWarrantySelector) {
+    if (!isValidPageSize(widthMm, heightMm)) throw new Error("The warranty page size is invalid.");
+
+    const documentElement = document.querySelector(targetSelector);
+    if (!documentElement) throw new Error("The warranty document is unavailable for printing.");
+
     let pageStyle = document.getElementById("garantie-express-dynamic-page-style");
     if (!pageStyle) {
         pageStyle = document.createElement("style");
@@ -54,16 +81,19 @@ export async function printWarranty(widthMm, heightMm, inkSaver, targetSelector 
         document.head.appendChild(pageStyle);
     }
 
-    pageStyle.textContent = `@page { size: ${widthMm}mm ${heightMm}mm; margin: 0; }`;
-    document.body.classList.add("garantie-express-printing");
-    document.body.classList.toggle("garantie-express-ink-saver", inkSaver);
+    let printRoot;
 
     try {
-        const documentElement = document.querySelector(targetSelector);
-        if (documentElement) await waitForDocumentAssets(documentElement);
-        else await nextFrame();
+        pageStyle.textContent = `@page { size: ${widthMm}mm ${heightMm}mm; margin: 0; }`;
+        document.body.classList.add("garantie-express-printing");
+        document.body.classList.toggle("garantie-express-ink-saver", inkSaver);
+        printRoot = createPrintRoot(documentElement, widthMm, heightMm);
+
+        const printedDocument = printRoot.querySelector(".warranty-document");
+        await waitForDocumentAssets(printedDocument);
         window.print();
     } finally {
+        printRoot?.remove();
         document.body.classList.remove("garantie-express-printing", "garantie-express-ink-saver");
         pageStyle.textContent = "";
     }

@@ -20,17 +20,18 @@ public sealed class WarrantyDraftService(
             error => Task.FromResult(OperationResult<DraftWarranty>.Failure(error)));
 
     public Task<OperationResult> ClearAsync(
+        string expectedId,
         long expectedVersion,
         CancellationToken cancellationToken = default) =>
-        expectedVersion < 0
+        !DraftWarranty.IsValidIdentity(expectedId, expectedVersion)
             ? Task.FromResult(OperationResult.Failure(new OperationError(
-                "Draft.InvalidVersion", "The draft version is invalid.")))
-            : repository.ClearAsync(expectedVersion, cancellationToken);
+                "Draft.InvalidIdentity", "The draft identity is invalid.")))
+            : repository.ClearAsync(expectedId, expectedVersion, cancellationToken);
 
     private OperationResult<DraftWarranty> Validate(DraftWarranty? draft)
     {
         if (draft is null) return Invalid("DataRequired");
-        if (draft.Version < 0) return Invalid("VersionInvalid");
+        if (!draft.HasValidIdentity) return Invalid("IdentityInvalid");
         if (!Enum.IsDefined(draft.ServiceType)) return Invalid("ServiceTypeInvalid");
         if (draft.RepairNote is not null
             && (draft.ServiceType != WarrantyServiceType.Repair

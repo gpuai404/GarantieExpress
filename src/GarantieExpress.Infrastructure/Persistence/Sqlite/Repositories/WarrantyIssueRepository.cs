@@ -214,9 +214,13 @@ internal sealed class WarrantyIssueRepository(
 
         sql.CommandText = """
             DELETE FROM Drafts
-            WHERE Id = 1 AND Version = $draftVersion;
+            WHERE Id = 1
+              AND Version = $draftVersion
+              AND ($draftId = '' AND json_extract(PayloadJson, '$.id') IS NULL
+                   OR json_extract(PayloadJson, '$.id') = $draftId);
             """;
         sql.Parameters.Clear();
+        sql.Parameters.AddWithValue("$draftId", command.SourceDraft.Id);
         sql.Parameters.AddWithValue("$draftVersion", command.SourceDraft.Version);
         return await sql.ExecuteNonQueryAsync(cancellationToken) == 1
             ? OperationResult.Success()
@@ -254,15 +258,30 @@ internal sealed class WarrantyIssueRepository(
             .ToList();
         if (!actual.SequenceEqual(expected)) return StaleIssuanceState();
 
-        sql.CommandText = "SELECT Version FROM Drafts WHERE Id = 1;";
-        var draftVersion = await sql.ExecuteScalarAsync(cancellationToken);
-        return command.SourceDraft.Version == 0
-            ? draftVersion is null ? OperationResult.Success() : StaleDraft()
-            : draftVersion is not null
-              && SqliteStoredData.Decode(() => Convert.ToInt64(draftVersion))
-                == command.SourceDraft.Version
+        sql.CommandText = """
+            SELECT Version,
+                   coalesce(json_extract(PayloadJson, '$.id'), '')
+            FROM Drafts
+            WHERE Id = 1;
+            """;
+        sql.Parameters.Clear();
+        await using var draftReader = await sql.ExecuteReaderAsync(cancellationToken);
+        if (!await draftReader.ReadAsync(cancellationToken))
+            return command.SourceDraft.Version == 0
                 ? OperationResult.Success()
                 : StaleDraft();
+
+        if (command.SourceDraft.Version == 0) return StaleDraft();
+        var currentDraft = SqliteStoredData.Decode(() => (
+            Version: draftReader.GetInt64(0),
+            Id: draftReader.GetString(1)));
+        return currentDraft.Version == command.SourceDraft.Version
+               && string.Equals(
+                   currentDraft.Id,
+                   command.SourceDraft.Id,
+                   StringComparison.Ordinal)
+            ? OperationResult.Success()
+            : StaleDraft();
     }
 
     private static async Task<OperationResult<WarrantyRecord>?> FindPreviousResultAsync(

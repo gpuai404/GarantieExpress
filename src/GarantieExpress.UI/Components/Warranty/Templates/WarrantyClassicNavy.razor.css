@@ -121,14 +121,14 @@
 .classic-navy-a5 .classic-navy-store-header { padding: 0 8mm; gap: 6mm; }
 .classic-navy-a5 .classic-navy-store-identity img { max-width: 46mm; max-height: 9mm; }
 .classic-navy-a5 .classic-navy-store-identity strong { font-size: 12pt; }
-.classic-navy-a5 .classic-navy-store-identity span { font-size: 4.8pt; }
+.classic-navy-a5 .classic-navy-store-identity span { font-size: 5pt; }
 .classic-navy-a5 .classic-navy-store-header em { max-width: 40mm; font-size: 7pt; }
 .classic-navy-a5 .classic-navy-title { padding: 6mm 8mm 4mm; gap: 6mm; }
 .classic-navy-a5 .classic-navy-title > div:first-child > span { font-size: 5.2pt; letter-spacing: .16em; }
 .classic-navy-a5 .classic-navy-title h2 { max-width: 93mm; margin-top: 2.5mm; font-size: 22pt; }
 .classic-navy-a5 .classic-navy-badge { width: 27mm; height: 27mm; outline-offset: -2.3mm; }
 .classic-navy-a5 .classic-navy-badge strong { font-size: 19pt; }
-.classic-navy-a5 .classic-navy-badge span { width: 18mm; margin-top: 1mm; font-size: 4.4pt; letter-spacing: .12em; }
+.classic-navy-a5 .classic-navy-badge span { width: 18mm; margin-top: 1mm; font-size: 5pt; letter-spacing: .12em; }
 .classic-navy-a5 .classic-navy-divider { margin: 0 8mm; }
 .classic-navy-a5 .classic-navy-details { padding: 5mm 8mm 3mm; grid-template-columns: minmax(0, 1.4fr) minmax(0, .8fr); gap: 5mm; }
 .classic-navy-a5 .classic-navy-heading { gap: 1.3mm; }
@@ -148,7 +148,7 @@
 .classic-navy-a5 .classic-navy-warranty ::deep .duration-option { font-size: 5.8pt; }
 .classic-navy-a5 .classic-navy-warranty ::deep .mark { width: 3.8mm; height: 3.8mm; }
 .classic-navy-a5 .classic-navy-warranty .coverage-dates { gap: 2.5mm; }
-.classic-navy-a5 .classic-navy-warranty p span { font-size: 4.5pt; letter-spacing: .12em; }
+.classic-navy-a5 .classic-navy-warranty p span { font-size: 5pt; letter-spacing: .12em; }
 .classic-navy-a5 .classic-navy-warranty p strong { font-size: 7pt; }
 .classic-navy-a5 .classic-navy-terms { padding: 6mm 8mm 2mm; }
 .classic-navy-a5 .classic-navy-terms > p { margin-top: 2.5mm; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; font-size: 6pt; line-height: 1.4; }
@@ -156,7 +156,7 @@
 .classic-navy-a5 .classic-navy-signatures ::deep .signature-line { min-height: 14mm; }
 .classic-navy-a5 .classic-navy-footer { padding: 0 8mm; gap: 4mm; }
 .classic-navy-a5 .classic-navy-footer strong { font-size: 5.2pt; }
-.classic-navy-a5 .classic-navy-footer span { font-size: 4.5pt; }
+.classic-navy-a5 .classic-navy-footer span { font-size: 5pt; }
 .classic-navy-a5 .classic-navy-footer em { font-size: 5.2pt; }
 
 .warranty-classic-navy.classic-navy-a6 {
@@ -172,40 +172,40 @@
 .classic-navy-a6 .classic-navy-store-identity span { display: none; }
 .classic-navy-a6 .classic-navy-store-header em { max-width: 31mm; font-size: 5.5pt; }
 .classic-navy-a6 .classic-navy-title { padding: 3mm 5mm 2mm; gap: 4mm; }
-.classic-navy-a6 .classic-navy-title > div:first-child > span { font-size: 4.2pt; letter-spacing: .1em; }
+.classic-navy-a6 .classic-navy-title > div:first-child > span { font-size: 5pt; letter-spacing: .1em; }
 .classic-navy-a6 .classic-navy-title h2 { max-width: 68mm; margin-top: 1.5mm; font-size: 15pt; }
 .classic-navy-a6 .classic-navy-badge { width: 18mm; height: 18mm; border-width: .3mm; outline-offset: -1.7mm; }
 .classic-navy-a6 .classic-navy-badge strong { font-size: 12pt; }
-.classic-navy-a6 .classic-navy-badge span { width: 12mm; margin-top: .6mm; font-size: 3.4pt; letter-spacing: .06em; }
+.classic-navy-a6 .classic-navy-badge span { width: 12mm; margin-top: .6mm; font-size: 5pt; letter-spacing: .04em; }
 .classic-navy-a6 .classic-navy-divider { margin: 0 5mm; }
 .classic-navy-a6 .classic-navy-details { padding: 3mm 5mm 2mm; grid-template-columns: minmax(0, 1.55fr) minmax(0, .75fr); gap: 3mm; }
 .classic-navy-a6 .classic-navy-heading { gap: .8mm; }
 .classic-navy-a6 .classic-navy-heading > span { font-size: 5.2pt; }
 .classic-navy-a6 .classic-navy-heading h3 { font-size: 7.5pt; }
-.classic-navy-a6 .classic-navy-product ::deep .service-type { margin: 1mm 0 .5mm; padding: .3mm 1mm; font-size: 4.3pt; }
-.classic-navy-a6 .classic-navy-product ::deep .service-note { margin-bottom: 0; -webkit-line-clamp: 1; font-size: 4.2pt; }
+.classic-navy-a6 .classic-navy-product ::deep .service-type { margin: 1mm 0 .5mm; padding: .3mm 1mm; font-size: 5pt; }
+.classic-navy-a6 .classic-navy-product ::deep .service-note { margin-bottom: 0; -webkit-line-clamp: 1; font-size: 5pt; }
 .classic-navy-a6 .classic-navy-details dl { margin-top: 1mm; }
 .classic-navy-a6 .classic-navy-details dl div { min-height: 6.8mm; grid-template-columns: 18mm minmax(0, 1fr); gap: .7mm; }
-.classic-navy-a6 .classic-navy-details dt { font-size: 4.2pt; }
+.classic-navy-a6 .classic-navy-details dt { font-size: 5pt; }
 .classic-navy-a6 .classic-navy-details dd { font-size: 5.3pt; }
 .classic-navy-a6 .classic-navy-product > p { display: none; }
 .classic-navy-a6 .classic-navy-purchase dl div { grid-template-columns: 1fr; }
 .classic-navy-a6 .classic-navy-purchase dd { font-size: 6pt; }
 .classic-navy-a6 .classic-navy-warranty { margin: 0 5mm; padding: 3mm; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 2mm; }
 .classic-navy-a6 .classic-navy-warranty ::deep .duration-options { margin-top: 1.5mm; gap: 1mm 2mm; }
-.classic-navy-a6 .classic-navy-warranty ::deep .duration-option { gap: .8mm; font-size: 4.5pt; }
-.classic-navy-a6 .classic-navy-warranty ::deep .mark { width: 3mm; height: 3mm; font-size: 4.5pt; }
+.classic-navy-a6 .classic-navy-warranty ::deep .duration-option { gap: .8mm; font-size: 5pt; }
+.classic-navy-a6 .classic-navy-warranty ::deep .mark { width: 3mm; height: 3mm; font-size: 5pt; }
 .classic-navy-a6 .classic-navy-warranty .coverage-dates { gap: 1.5mm; }
 .classic-navy-a6 .classic-navy-warranty p { gap: .7mm; }
-.classic-navy-a6 .classic-navy-warranty p span { font-size: 3.6pt; letter-spacing: .05em; }
+.classic-navy-a6 .classic-navy-warranty p span { font-size: 5pt; letter-spacing: .03em; }
 .classic-navy-a6 .classic-navy-warranty p strong { font-size: 5.2pt; }
 .classic-navy-a6 .classic-navy-terms { padding: 3mm 5mm 1mm; }
-.classic-navy-a6 .classic-navy-terms > p { margin-top: 1.5mm; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 4.8pt; line-height: 1.25; }
+.classic-navy-a6 .classic-navy-terms > p { margin-top: 1.5mm; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 5pt; line-height: 1.25; }
 .classic-navy-a6 .classic-navy-signatures { padding: 0 5mm 2mm; grid-template-columns: 1fr 1fr .7fr; gap: 3mm; }
 .classic-navy-a6 .classic-navy-signatures ::deep .signature-line { min-height: 10mm; }
-.classic-navy-a6 .classic-navy-signatures ::deep .signature-line span { font-size: 4.5pt; }
-.classic-navy-a6 .classic-navy-signatures ::deep .signature-line strong { font-size: 4.8pt; }
+.classic-navy-a6 .classic-navy-signatures ::deep .signature-line span { font-size: 5pt; }
+.classic-navy-a6 .classic-navy-signatures ::deep .signature-line strong { font-size: 5pt; }
 .classic-navy-a6 .classic-navy-footer { padding: 0 5mm; gap: 3mm; }
-.classic-navy-a6 .classic-navy-footer strong { font-size: 4.3pt; }
+.classic-navy-a6 .classic-navy-footer strong { font-size: 5pt; }
 .classic-navy-a6 .classic-navy-footer span { display: none; }
-.classic-navy-a6 .classic-navy-footer em { font-size: 4.4pt; }
+.classic-navy-a6 .classic-navy-footer em { font-size: 5pt; }

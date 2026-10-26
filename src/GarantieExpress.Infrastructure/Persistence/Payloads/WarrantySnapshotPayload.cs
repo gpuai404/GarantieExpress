@@ -1,10 +1,12 @@
 using System.Text.Json.Serialization;
+using GarantieExpress.Application.Warranties.Issue;
 using GarantieExpress.Domain;
 
 namespace GarantieExpress.Infrastructure.Persistence.Payloads;
 
 internal sealed class WarrantySnapshotPayload
 {
+    public int HashVersion { get; set; } = WarrantySnapshotHasher.CurrentVersion;
     public StoreDetailsPayload? Store { get; set; } = new();
     public ThemePayload? Theme { get; set; } = new();
     public string? LogoDataUri { get; set; }
@@ -58,6 +60,7 @@ internal static class WarrantySnapshotPayloadMapper
 
         return new WarrantySnapshotPayload
         {
+            HashVersion = WarrantySnapshotHasher.CurrentVersion,
             Store = StoreDetailsPayload.FromDomain(snapshot.Store),
             Theme = ThemePayloadMapper.FromDomain(snapshot.Theme),
             LogoDataUri = snapshot.LogoDataUri,

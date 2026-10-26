@@ -10,6 +10,7 @@ public sealed class WarrantyIssueRecoveryCoordinator(
     IIssuanceRecoveryStore recoveryStore)
 {
     private WarrantyIssueRequest? _pendingRequest;
+    private string? _cleanupRequestId;
 
     public bool IsReady { get; private set; }
     public bool HasPendingRequest => _pendingRequest is not null;
@@ -17,6 +18,16 @@ public sealed class WarrantyIssueRecoveryCoordinator(
     public async Task<OperationResult<WarrantyIssueResult?>>
         InitializeAsync(CancellationToken cancellationToken = default)
     {
+        if (_cleanupRequestId is not null)
+        {
+            var cleanup = await ClearRecoveryMarkerAsync(
+                _cleanupRequestId,
+                cancellationToken);
+            return cleanup is OperationResult.Failed failedCleanup
+                ? Failure(failedCleanup.Details)
+                : Success(null);
+        }
+
         var stored = await recoveryStore.GetAsync(cancellationToken);
         if (stored is OperationResult<WarrantyIssueRequest?>.Failed failed)
             return Failure(failed.Details);
@@ -60,14 +71,24 @@ public sealed class WarrantyIssueRecoveryCoordinator(
     public async Task<OperationResult> CompleteAsync(
         CancellationToken cancellationToken = default)
     {
-        if (_pendingRequest is null) return OperationResult.Success();
+        var requestId = _pendingRequest?.Id ?? _cleanupRequestId;
+        if (requestId is null) return OperationResult.Success();
 
-        var result = await recoveryStore.ClearAsync(_pendingRequest.Id, cancellationToken);
-        if (result is OperationResult.Succeeded)
-            _pendingRequest = null;
-        else
-            IsReady = false;
+        // Once an issuance has been committed, its request must never remain eligible
+        // to take ownership of a newly edited form. Keep failed cleanup separate so it
+        // can be retried before the next issuance.
+        _pendingRequest = null;
+        _cleanupRequestId = requestId;
+        return await ClearRecoveryMarkerAsync(requestId, cancellationToken);
+    }
 
+    private async Task<OperationResult> ClearRecoveryMarkerAsync(
+        string requestId,
+        CancellationToken cancellationToken)
+    {
+        var result = await recoveryStore.ClearAsync(requestId, cancellationToken);
+        IsReady = result is OperationResult.Succeeded;
+        if (IsReady) _cleanupRequestId = null;
         return result;
     }
 

@@ -7,37 +7,45 @@ using GarantieExpress.UI.Abstractions;
 using GarantieExpress.UI.Features.Settings.Models;
 using GarantieExpress.Domain;
 using GarantieExpress.UI.Localization;
+using GarantieExpress.UI.Services;
 
 namespace GarantieExpress.UI.Features.Settings;
 
-public partial class Settings
+public partial class Settings : IDisposable
 {
     [Inject] private StoreSettingsService SettingsService { get; set; } = null!;
     [Inject] private IImageService ImageService { get; set; } = null!;
     [Inject] private ILocalizationService Localization { get; set; } = null!;
     [Inject] private ThemePresentation ThemePresentation { get; set; } = null!;
+    [Inject] private PendingChangesCoordinator PendingChanges { get; set; } = null!;
 
     private SettingsFormModel? _settings;
+    private StoreSettings? _savedSettings;
     private bool _loading = true;
     private bool _saving;
     private bool _saveFailed;
+    private bool _dirty;
     private string _durationText = string.Empty;
     private string _servicesText = string.Empty;
     private string _selectedPreset = $"built:{ThemePresets.DefaultKey}";
     private string _customPresetName = string.Empty;
     private string? _durationError;
     private string? _message;
+    private IDisposable? _pendingChangesRegistration;
 
     private IReadOnlyList<ContrastCheck> ContrastChecks => ThemePresentation.CheckContrast(_settings!.Theme);
 
     protected override async Task OnInitializedAsync()
     {
+        _pendingChangesRegistration = PendingChanges.Register(PrepareToLeaveAsync);
         var settingsResult = await SettingsService.LoadAsync();
         if (settingsResult is OperationResult<StoreSettings>.Succeeded settingsSucceeded)
         {
+            _savedSettings = settingsSucceeded.Value;
             _settings = SettingsFormModel.FromSettings(settingsSucceeded.Value);
             _durationText = string.Join(", ", _settings!.OfferedDurationsMonths);
             _servicesText = string.Join(Environment.NewLine, _settings.Services);
+            _dirty = false;
         }
         else
         {
@@ -54,6 +62,7 @@ public partial class Settings
         if (result is OperationResult<string>.Succeeded succeeded)
         {
             _settings!.LogoDataUri = succeeded.Value;
+            _dirty = true;
             SetMessage(Localization["Settings_LogoProcessed"], false);
         }
         else
@@ -65,6 +74,7 @@ public partial class Settings
     private void RemoveLogo()
     {
         _settings!.LogoDataUri = null;
+        _dirty = true;
         SetMessage(Localization["Settings_LogoRemoved"], false);
     }
 
@@ -74,6 +84,7 @@ public partial class Settings
         _settings!.Services = _servicesText
             .Split(['\r', '\n'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             .ToList();
+        _dirty = true;
     }
 
     private void OnDurationsChanged(ChangeEventArgs args)
@@ -90,6 +101,7 @@ public partial class Settings
 
         _durationError = null;
         _settings!.OfferedDurationsMonths = parts.Select(int.Parse).ToList();
+        _dirty = true;
     }
 
     private void ApplyPreset(ChangeEventArgs args)
@@ -111,6 +123,7 @@ public partial class Settings
             var preset = ThemePresets.All.FirstOrDefault(candidate => candidate.Key == key)
                 ?? ThemePresets.All.First();
             _settings!.Theme = preset.Theme.Clone();
+            _dirty = true;
             return;
         }
 
@@ -120,6 +133,7 @@ public partial class Settings
             && index < _settings!.SavedThemePresets.Count)
         {
             _settings.Theme = _settings.SavedThemePresets[index].Theme.Clone();
+            _dirty = true;
         }
     }
 
@@ -156,6 +170,7 @@ public partial class Settings
         }
 
         _customPresetName = string.Empty;
+        _dirty = true;
         SetMessage(Localization["Theme_PresetSaved"], false);
     }
 
@@ -169,9 +184,11 @@ public partial class Settings
             var result = await SettingsService.SaveAsync(_settings!.ToInput());
             if (result is OperationResult<StoreSettings>.Succeeded succeeded)
             {
+                _savedSettings = succeeded.Value;
                 _settings = SettingsFormModel.FromSettings(succeeded.Value);
                 _durationText = string.Join(", ", _settings.OfferedDurationsMonths);
                 _servicesText = string.Join(Environment.NewLine, _settings.Services);
+                _dirty = false;
                 SetMessage(Localization["Settings_Saved"], false);
             }
             else
@@ -182,9 +199,34 @@ public partial class Settings
         finally { _saving = false; }
     }
 
+    private void DiscardChanges()
+    {
+        if (_savedSettings is null || _saving) return;
+
+        _settings = SettingsFormModel.FromSettings(_savedSettings);
+        _durationText = string.Join(", ", _settings.OfferedDurationsMonths);
+        _servicesText = string.Join(Environment.NewLine, _settings.Services);
+        _durationError = null;
+        _selectedPreset = $"built:{ThemePresets.DefaultKey}";
+        _customPresetName = string.Empty;
+        _dirty = false;
+        SetMessage(null, false);
+    }
+
     private void SetMessage(string? message, bool isError)
     {
         _message = message;
         _saveFailed = isError;
     }
+
+    private void MarkDirty(ChangeEventArgs _) => _dirty = true;
+
+    private Task<OperationResult> PrepareToLeaveAsync() => Task.FromResult(
+        _dirty || _saving
+            ? OperationResult.Failure(new OperationError(
+                "UI.UnsavedChanges",
+                Localization["PendingChanges_Unsaved"]))
+            : OperationResult.Success());
+
+    public void Dispose() => _pendingChangesRegistration?.Dispose();
 }
