@@ -4,7 +4,7 @@
 
 <article class="warranty-document warranty-a6" data-template="a6-essential" data-print-bounded style="@ThemePresentation.ToCssVariables(Model.Theme)">
     <header class="receipt-store-header">
-        <div>
+        <div class="receipt-store-identity">
             @if (Model.LogoDataUri is not null)
             {
                 <img src="@Model.LogoDataUri" alt="" />
@@ -15,7 +15,16 @@
             }
             <span>@Model.Slogan</span>
         </div>
-        <small>@ContactLine</small>
+        <div class="receipt-contact">
+            @if (!string.IsNullOrWhiteSpace(Model.Address))
+            {
+                <span class="receipt-address">@Model.Address</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(ContactDetailsLine))
+            {
+                <span class="receipt-contact-details">@ContactDetailsLine</span>
+            }
+        </div>
     </header>
 
     <section class="receipt-title">
@@ -68,6 +77,6 @@
 @code {
     [Parameter, EditorRequired] public required WarrantyDisplayModel Model { get; set; }
 
-    private string ContactLine => string.Join(" · ", new[] { Model.Address, Model.Phone, Model.Vat }
+    private string ContactDetailsLine => string.Join(" · ", new[] { Model.Phone, Model.Vat }
         .Where(value => !string.IsNullOrWhiteSpace(value)));
 }

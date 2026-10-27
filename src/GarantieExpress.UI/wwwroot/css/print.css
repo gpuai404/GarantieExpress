@@ -83,4 +83,17 @@ body.garantie-express-measuring-print .preview-canvas .warranty-document { zoom:
     body.garantie-express-ink-saver .warranty-document .classic-navy-warranty {
         background: transparent !important;
     }
+    body.garantie-express-ink-saver .warranty-document .duration-option.selected .mark {
+        color: var(--primary) !important;
+        background: transparent !important;
+    }
+    body.garantie-express-ink-saver .warranty-document .service-type {
+        box-sizing: border-box !important;
+        color: var(--primary) !important;
+        background: transparent !important;
+        border: .3mm solid currentColor !important;
+    }
+    body.garantie-express-ink-saver .warranty-document .product-illustration .screen {
+        fill: transparent !important;
+    }
 }

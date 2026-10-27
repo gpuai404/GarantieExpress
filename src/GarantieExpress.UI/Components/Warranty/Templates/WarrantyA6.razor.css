@@ -15,11 +15,12 @@
 }
 
 .receipt-store-header { padding: 0 3mm; display: flex; align-items: center; justify-content: space-between; gap: 3mm; color: var(--on-primary); background: var(--primary); }
-.receipt-store-header > div { min-width: 0; display: grid; gap: .5mm; }
+.receipt-store-identity { min-width: 0; display: grid; flex: 1 1 auto; gap: .5mm; }
 .receipt-store-header img { display: block; max-width: 32mm; max-height: 6mm; object-fit: contain; object-position: left center; }
-.receipt-store-header div > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10pt; letter-spacing: .04em; text-transform: uppercase; }
-.receipt-store-header div > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 5.8pt Georgia, serif; opacity: .82; }
-.receipt-store-header small { max-width: 48mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-size: 5.5pt; opacity: .78; }
+.receipt-store-identity > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10pt; letter-spacing: .04em; text-transform: uppercase; }
+.receipt-store-identity > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 5.8pt Georgia, serif; opacity: .82; }
+.receipt-contact { max-width: 53mm; min-width: 0; display: grid; flex: 0 1 auto; gap: .6mm; text-align: right; font-size: 5.3pt; line-height: 1.1; opacity: .82; }
+.receipt-contact > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .receipt-title { padding: 1.5mm 3mm; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; column-gap: 3mm; color: var(--on-secondary); background: var(--secondary); }
 .receipt-title > span { font-size: 5.5pt; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -48,7 +49,7 @@
 .receipt-warranty ::deep .duration-option { gap: 1mm; font-size: 6.3pt; }
 .receipt-warranty ::deep .mark { width: 3.2mm; height: 3.2mm; font-size: 5.8pt; }
 .coverage-dates { margin-top: 1mm; display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; }
-.coverage-dates p { margin: 0; min-width: 0; display: flex; justify-content: space-between; gap: 1mm; font-size: 5.3pt; }
+.coverage-dates p { margin: 0; min-width: 0; display: grid; grid-template-columns: max-content max-content; align-items: baseline; justify-content: start; gap: 1mm; font-size: 5.3pt; }
 .coverage-dates span { color: var(--muted-ink); text-transform: uppercase; }
 .coverage-dates strong { color: var(--secondary); white-space: nowrap; }
 

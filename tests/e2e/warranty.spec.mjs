@@ -43,6 +43,43 @@ test("issue form updates every certificate without clipping", async ({ page }) =
     }
 });
 
+test("ink saver keeps the service tag legible without a heavy fill", async ({ page }) => {
+    await page.locator("#issue-page-size").selectOption("a6");
+    const serviceTag = page.locator(".warranty-print-target .service-type");
+    await expect(serviceTag).toBeVisible();
+
+    const normalColors = await serviceTag.evaluate(element => {
+        const style = getComputedStyle(element);
+        return { foreground: style.color, background: style.backgroundColor };
+    });
+    expect(normalColors.foreground).not.toBe(normalColors.background);
+    expect(normalColors.background).not.toBe("rgba(0, 0, 0, 0)");
+
+    await page.emulateMedia({ media: "print" });
+    await page.locator("body").evaluate(element =>
+        element.classList.add("garantie-express-ink-saver"));
+
+    const inkSaverColors = await serviceTag.evaluate(element => {
+        const style = getComputedStyle(element);
+        return {
+            foreground: style.color,
+            background: style.backgroundColor,
+            borderStyle: style.borderStyle,
+            borderWidth: style.borderWidth
+        };
+    });
+    expect(inkSaverColors.background).toBe("rgba(0, 0, 0, 0)");
+    expect(inkSaverColors.foreground).not.toBe(inkSaverColors.background);
+    expect(inkSaverColors.borderStyle).toBe("solid");
+    expect(Number.parseFloat(inkSaverColors.borderWidth)).toBeGreaterThan(0);
+
+    const fits = await page.evaluate(async () => {
+        const print = await import("/_content/GarantieExpress.UI/js/print.js");
+        return print.warrantyFitsPage();
+    });
+    expect(fits).toBe(true);
+});
+
 test("navigation exposes keyboard and expanded state", async ({ page }, testInfo) => {
     await page.goto("/");
     const skipLink = page.locator(".skip-link");
