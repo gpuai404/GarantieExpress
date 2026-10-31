@@ -1,0 +1,90 @@
+@namespace GarantieExpress.UI.Components.Warranty.Templates
+@using GarantieExpress.UI.Components.Warranty.Primitives
+@inject ThemePresentation ThemePresentation
+
+<article class="warranty-document warranty-a4" data-template="a4-reference" data-print-bounded style="@ThemePresentation.ToCssVariables(Model.Theme)">
+    <header class="store-header">
+        <div class="store-identity">
+            @if (Model.LogoDataUri is not null)
+            {
+                <img src="@Model.LogoDataUri" alt="" />
+            }
+            else
+            {
+                <strong>@Model.StoreName</strong>
+            }
+            <span>@string.Join(" · ", Model.Services)</span>
+        </div>
+        <div class="store-slogan">@Model.Slogan</div>
+    </header>
+
+    <section class="certificate-title">
+        <div>
+            <span>@Model.Labels.CertificateEyebrow · @Model.Number</span>
+            <h2>@Model.Labels.CertificateTitle</h2>
+            <em>@Model.Slogan</em>
+        </div>
+        <div class="warranty-badge"><span>@Model.BadgeText</span></div>
+    </section>
+
+    <section class="product-area">
+        <div class="product-data bordered-panel" data-print-bounded>
+            <div class="panel-heading"><span>01</span><h3>@Model.Labels.ProductDetails</h3></div>
+            <ServiceOptions Options="@Model.ServiceOptions" Note="@Model.RepairNote" />
+            <PrintedField Label="@Model.Labels.ProductType" Value="@Model.CategoryName" />
+            <PrintedField Label="@Model.Labels.BrandModel" Value="@Model.BrandModel" />
+            <PrintedField Label="@Model.SerialLabel" Value="@Model.Serial" />
+            <p class="identifier-note">● <em>@Model.Labels.IdentifierHint</em></p>
+        </div>
+        <aside class="registered-product bordered-panel">
+            <span class="aside-label">@Model.Labels.RegisteredProduct</span>
+            <ProductIllustration SvgMarkup="@Model.IllustrationSvg" />
+            <strong>@Model.BrandModel</strong>
+            <small>@Model.CategoryName</small>
+            <p>@Model.Labels.IdentifierHint</p>
+        </aside>
+    </section>
+
+    <section class="purchase-warranty-row">
+        <div class="purchase-box">
+            <div class="panel-heading"><span>02</span><h3>@Model.Labels.Purchase</h3></div>
+            <div class="purchase-values">
+                <div><small>@Model.Labels.PurchaseDate</small><strong>@Model.PurchaseDate</strong></div>
+                <div><small>@Model.Labels.Price</small><strong>@Model.Price</strong></div>
+            </div>
+        </div>
+        <div class="warranty-box">
+            <div class="panel-heading"><span>03</span><h3>@Model.Labels.Warranty</h3></div>
+            <DurationOptions Options="@Model.Durations" />
+            <div class="coverage-dates" data-print-bounded>
+                @if (Model.ValidFrom is not null)
+                {
+                    <p><span>@Model.Labels.ValidFrom</span> <strong>@Model.ValidFrom</strong></p>
+                }
+                <p><span>@Model.Labels.ValidUntil</span> <strong>@Model.EndDate</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="terms-box bordered-panel" data-print-bounded>
+        <div class="panel-heading"><span>04</span><h3>@Model.Labels.Terms</h3></div>
+        <p data-print-bounded>@Model.Terms</p>
+    </section>
+
+    <section class="signatures">
+        <SignatureLine Label="@Model.Labels.Customer" Hint="@Model.Labels.CustomerName" />
+        <SignatureLine Label="@Model.Labels.Signature" />
+        <SignatureLine Label="@Model.Labels.IssuedOn" Hint="@Model.IssuedDate" />
+    </section>
+
+    <footer>
+        <div><strong>@Model.StoreName</strong><span>@ContactLine</span></div>
+        <em>@Model.Slogan</em>
+    </footer>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public required WarrantyDisplayModel Model { get; set; }
+
+    private string ContactLine => string.Join(" · ", new[] { Model.Address, Model.Phone, Model.Vat }.Where(value => !string.IsNullOrWhiteSpace(value)));
+}

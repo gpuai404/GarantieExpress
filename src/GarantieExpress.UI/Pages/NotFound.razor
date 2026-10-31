@@ -1,0 +1,11 @@
+﻿@page "/not-found"
+@layout MainLayout
+@inject ILocalizationService Localization
+
+<PageTitle>@Localization["NotFound_Title"] · GarantieExpress</PageTitle>
+<div class="empty-state">
+    <span>404</span>
+    <h1>@Localization["NotFound_Heading"]</h1>
+    <p>@Localization["NotFound_Text"]</p>
+    <p><a class="button primary" href="">@Localization["NotFound_Back"]</a></p>
+</div>

@@ -1,0 +1,81 @@
+@namespace GarantieExpress.UI.Components.Warranty.Templates
+@using GarantieExpress.UI.Components.Warranty.Primitives
+@inject ThemePresentation ThemePresentation
+
+<article class="warranty-document warranty-a5" data-template="a5-compact" data-print-bounded style="@ThemePresentation.ToCssVariables(Model.Theme)">
+    <header class="compact-store-header">
+        <div class="compact-store-identity">
+            @if (Model.LogoDataUri is not null)
+            {
+                <img src="@Model.LogoDataUri" alt="" />
+            }
+            else
+            {
+                <strong>@Model.StoreName</strong>
+            }
+            <span>@string.Join(" · ", Model.Services)</span>
+        </div>
+        <div class="compact-contact"><strong>@Model.Slogan</strong><span>@ContactLine</span></div>
+    </header>
+
+    <section class="compact-title">
+        <div><span>@Model.Labels.CertificateEyebrow · @Model.Number</span><h2>@Model.Labels.CertificateTitle</h2></div>
+        <div class="compact-badge">@Model.BadgeText</div>
+    </section>
+
+    <section class="compact-product">
+        <div class="compact-product-copy" data-print-bounded>
+            <span class="section-kicker">01 · @Model.Labels.ProductDetails</span>
+            <ServiceOptions Options="@Model.ServiceOptions" Note="@Model.RepairNote" />
+            <dl>
+                <div><dt>@Model.Labels.ProductType</dt><dd>@Model.CategoryName</dd></div>
+                <div><dt>@Model.Labels.BrandModel</dt><dd>@Model.BrandModel</dd></div>
+                <div><dt>@Model.SerialLabel</dt><dd>@Model.Serial</dd></div>
+            </dl>
+            <p>@Model.Labels.IdentifierHint</p>
+        </div>
+        <div class="compact-product-art">
+            <ProductIllustration SvgMarkup="@Model.IllustrationSvg" />
+            <strong>@Model.CategoryName</strong>
+        </div>
+    </section>
+
+    <section class="compact-facts">
+        <div class="purchase-facts">
+            <span class="section-kicker">02 · @Model.Labels.Purchase</span>
+            <div><span>@Model.Labels.PurchaseDate</span><strong>@Model.PurchaseDate</strong></div>
+            <div><span>@Model.Labels.Price</span><strong>@Model.Price</strong></div>
+        </div>
+        <div class="warranty-facts">
+            <span class="section-kicker">03 · @Model.Labels.Warranty</span>
+            <DurationOptions Options="@Model.Durations" />
+            <div class="coverage-dates" data-print-bounded>
+                @if (Model.ValidFrom is not null)
+                {
+                    <p><span>@Model.Labels.ValidFrom</span><strong>@Model.ValidFrom</strong></p>
+                }
+                <p><span>@Model.Labels.ValidUntil</span><strong>@Model.EndDate</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="compact-terms" data-print-bounded>
+        <span class="section-kicker">04 · @Model.Labels.Terms</span>
+        <p data-print-bounded>@Model.Terms</p>
+    </section>
+
+    <section class="compact-signatures">
+        <SignatureLine Label="@Model.Labels.Customer" Hint="@Model.Labels.CustomerName" />
+        <SignatureLine Label="@Model.Labels.Signature" />
+        <div class="compact-issued"><span>@Model.Labels.IssuedOn</span><strong>@Model.IssuedDate</strong></div>
+    </section>
+
+    <footer><strong>@Model.StoreName</strong><span>@ContactLine</span></footer>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public required WarrantyDisplayModel Model { get; set; }
+
+    private string ContactLine => string.Join(" · ", new[] { Model.Address, Model.Phone, Model.Vat }
+        .Where(value => !string.IsNullOrWhiteSpace(value)));
+}

@@ -1,0 +1,2 @@
+.service-type { display: inline-block; align-self: flex-start; margin: 0 0 2mm; padding: .6mm 2.2mm; color: var(--on-secondary); background: var(--secondary); border-radius: 1mm; font: 800 7pt Arial, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+.service-note { margin: 0 0 1.5mm; display: -webkit-box; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; color: var(--ink); font: 600 7pt/1.2 Arial, sans-serif; }

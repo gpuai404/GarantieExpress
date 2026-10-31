@@ -1,0 +1,37 @@
+@inject ILocalizationService Localization
+@inject TemplateRegistry Templates
+
+<WarrantyPreviewPanel Template="@SelectedTemplate" Model="@Model" Title="@Title" Subtitle="@Model.Number">
+    <Actions>
+        <label>@TemplateLabel
+            <select value="@SelectedTemplate.DesignKey" @onchange="DesignChanged">
+                @foreach (var design in Templates.Designs)
+                {
+                    <option value="@design.Key">@Localization[design.NameResourceKey]</option>
+                }
+            </select>
+        </label>
+        <label>@PageSizeLabel
+            <select value="@SelectedTemplate.PageSizeKey" @onchange="PageSizeChanged">
+                @foreach (var pageSize in Templates.PageSizes)
+                {
+                    <option value="@pageSize.Key">@Localization[pageSize.NameResourceKey]</option>
+                }
+            </select>
+        </label>
+        <button type="button" class="button" disabled="@Printing" @onclick="PrintClick">@PrintLabel</button>
+    </Actions>
+</WarrantyPreviewPanel>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string TemplateLabel { get; set; } = string.Empty;
+    [Parameter] public string PageSizeLabel { get; set; } = string.Empty;
+    [Parameter] public string PrintLabel { get; set; } = string.Empty;
+    [Parameter] public bool Printing { get; set; }
+    [Parameter, EditorRequired] public WarrantyTemplate SelectedTemplate { get; set; } = default!;
+    [Parameter, EditorRequired] public WarrantyDisplayModel Model { get; set; } = default!;
+    [Parameter] public EventCallback<ChangeEventArgs> DesignChanged { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> PageSizeChanged { get; set; }
+    [Parameter] public EventCallback PrintClick { get; set; }
+}

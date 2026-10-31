@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/Core/">
+    <Project Path="src/GarantieExpress.Domain/GarantieExpress.Domain.csproj" />
+    <Project Path="src/GarantieExpress.Application/GarantieExpress.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/Adapters/">
+    <Project Path="src/GarantieExpress.Infrastructure/GarantieExpress.Infrastructure.csproj" />
+    <Project Path="src/GarantieExpress.UI/GarantieExpress.UI.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/GarantieExpress.Host/GarantieExpress.Host.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GarantieExpress.Host.Tests/GarantieExpress.Host.Tests.csproj" />
+    <Project Path="tests/GarantieExpress.Infrastructure.Tests/GarantieExpress.Infrastructure.Tests.csproj" />
+    <Project Path="tests/GarantieExpress.UI.Tests/GarantieExpress.UI.Tests.csproj" />
+  </Folder>
+</Solution>

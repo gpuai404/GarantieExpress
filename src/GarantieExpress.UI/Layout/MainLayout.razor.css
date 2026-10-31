@@ -1,0 +1,16 @@
+.page { min-height: 100vh; display: flex; flex-direction: column; }
+main { min-width: 0; flex: 1; }
+.sidebar { background: #172b38; }
+.top-row { height: 3.5rem; padding: 0 1.5rem; display: flex; align-items: center; justify-content: flex-end; gap: .65rem; color: #617683; background: rgba(255,255,255,.88); border-bottom: 1px solid #e0e8ec; backdrop-filter: blur(8px); }
+.application-version { font: 600 .7rem ui-monospace, monospace; color: #7b8f99; }
+.status-dot { width: .5rem; height: .5rem; border-radius: 50%; background: #38a169; }
+.quit-button { padding: .35rem .6rem; color: #617683; background: transparent; border: 1px solid #bccdd6; border-radius: .35rem; cursor: pointer; }
+.quit-button:hover { color: #b42318; border-color: #b42318; }
+.content { padding: 2rem 1.25rem 4rem; }
+@media (max-width: 520px) { .local-status { display: none; } }
+@media (min-width: 760px) {
+    .page { flex-direction: row; }
+    .sidebar { width: 252px; min-height: 100vh; position: sticky; top: 0; align-self: flex-start; }
+    .top-row { position: sticky; top: 0; z-index: 10; }
+    .content { padding: 2.5rem clamp(2rem, 5vw, 5rem) 5rem; }
+}

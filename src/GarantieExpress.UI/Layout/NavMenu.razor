@@ -1,0 +1,53 @@
+@inject ILocalizationService Localization
+<div class="brand-row">
+    <div class="brand-content">
+        <a class="brand-link" href="">Garantie<span>Express</span></a>
+        <button title="@Localization["Navigation"]" aria-label="@Localization["Navigation"]" aria-expanded="@(_navigationCollapsed ? "false" : "true")" aria-controls="primary-navigation" class="navigation-toggle" @onclick="ToggleNavigation">
+            <span aria-hidden="true">☰</span>
+        </button>
+    </div>
+</div>
+
+<div id="primary-navigation" class="@NavigationCssClass" @onclick="ToggleNavigation">
+    <nav aria-label="@Localization["Navigation"]">
+        <div class="navigation-item">
+            <NavLink href="" Match="NavLinkMatch.All">
+                <span class="nav-symbol" aria-hidden="true">⌂</span> @Localization["Nav_Overview"]
+            </NavLink>
+        </div>
+        <div class="navigation-item">
+            <NavLink href="uitgeven">
+                <span class="nav-symbol" aria-hidden="true">＋</span> @Localization["Nav_Issue"]
+            </NavLink>
+        </div>
+        <div class="navigation-item">
+            <NavLink href="historiek">
+                <span class="nav-symbol" aria-hidden="true">≡</span> @Localization["Nav_History"]
+            </NavLink>
+        </div>
+        <div class="navigation-item">
+            <NavLink href="categorieen">
+                <span class="nav-symbol" aria-hidden="true">◇</span> @Localization["Nav_Categories"]
+            </NavLink>
+        </div>
+        <div class="navigation-item">
+            <NavLink href="producten">
+                <span class="nav-symbol" aria-hidden="true">▣</span> @Localization["Nav_Products"]
+            </NavLink>
+        </div>
+        <div class="navigation-item">
+            <NavLink href="instellingen">
+                <span class="nav-symbol" aria-hidden="true">⚙</span> @Localization["Nav_Settings"]
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool _navigationCollapsed = true;
+
+    private string NavigationCssClass =>
+        _navigationCollapsed ? "navigation collapsed" : "navigation";
+
+    private void ToggleNavigation() => _navigationCollapsed = !_navigationCollapsed;
+}

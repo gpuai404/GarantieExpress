@@ -1,0 +1,4 @@
+.duration-options { display: flex; flex-wrap: wrap; gap: 2mm 4mm; }
+.duration-option { display: inline-flex; align-items: center; gap: 1.4mm; color: var(--ink); font: 700 7.5pt Arial, sans-serif; white-space: nowrap; }
+.mark { width: 4mm; height: 4mm; display: inline-grid; place-items: center; color: var(--on-secondary); background: var(--paper); border: .3mm solid var(--secondary); font-size: 7pt; line-height: 1; }
+.selected .mark { background: var(--secondary); }

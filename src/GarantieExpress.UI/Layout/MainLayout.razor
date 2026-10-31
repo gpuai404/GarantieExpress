@@ -1,0 +1,103 @@
+﻿@inherits LayoutComponentBase
+@inject ILocalizationService Localization
+@inject NavigationManager Navigation
+@inject ILocalApplicationLifetime ApplicationLifetime
+@inject PendingChangesCoordinator PendingChanges
+@implements IDisposable
+@using GarantieExpress.Application.Common
+<div class="page">
+    <a class="skip-link" href="#main-content">@Localization["Navigation_SkipContent"]</a>
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row">
+            <LanguageSelector />
+            <span class="local-status">@Localization["LocalApplication"]</span>
+            <span class="application-version" title="@Localization["Update_CurrentVersion"]">
+                @($"v{ApplicationVersion}")
+            </span>
+            <span class="status-dot" aria-hidden="true"></span>
+            <button type="button" class="quit-button" disabled="@_leaving" @onclick="QuitAsync">
+                @Localization["Application_Quit"]
+            </button>
+        </div>
+
+        <article id="main-content" class="content" tabindex="-1">
+            @if (_leaveError is not null)
+            {
+                <p class="notice error" role="alert">@_leaveError</p>
+            }
+            <ErrorBoundary @ref="_errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent>
+                    <div class="notice error boundary-error" role="alert">
+                        <strong>@Localization["Error_Boundary_Title"]</strong>
+                        <p>@Localization["Error_Boundary_Text"]</p>
+                        <button type="button" class="button secondary" @onclick="ReloadAsync">@Localization["Error_Boundary_Reload"]</button>
+                    </div>
+                </ErrorContent>
+            </ErrorBoundary>
+        </article>
+    </main>
+</div>
+
+@code {
+    private ErrorBoundary? _errorBoundary;
+    private static readonly string ApplicationVersion = GetApplicationVersion();
+    private IDisposable? _navigationRegistration;
+    private string? _leaveError;
+    private bool _leaving;
+
+    protected override void OnInitialized() =>
+        _navigationRegistration = Navigation.RegisterLocationChangingHandler(OnLocationChangingAsync);
+
+    private async ValueTask OnLocationChangingAsync(LocationChangingContext context)
+    {
+        if (!await PrepareToLeaveAsync()) context.PreventNavigation();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task<bool> PrepareToLeaveAsync()
+    {
+        if (_leaving) return false;
+        _leaving = true;
+        try
+        {
+            var result = await PendingChanges.FlushAsync();
+            _leaveError = result is OperationResult.Failed failed ? failed.Error : null;
+            return result is OperationResult.Succeeded;
+        }
+        finally { _leaving = false; }
+    }
+
+    private async Task QuitAsync()
+    {
+        if (await PrepareToLeaveAsync()) ApplicationLifetime.RequestShutdown();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Reset any previously captured error whenever a new page body is rendered,
+        // so navigating away from a failed page clears the error boundary.
+        _errorBoundary?.Recover();
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (await PrepareToLeaveAsync()) Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+    public void Dispose() => _navigationRegistration?.Dispose();
+
+    private static string GetApplicationVersion()
+    {
+        var version = typeof(MainLayout).Assembly.GetName().Version;
+        return version is null
+            ? "unknown"
+            : $"{version.Major}.{version.Minor}.{Math.Max(version.Build, 0)}";
+    }
+}

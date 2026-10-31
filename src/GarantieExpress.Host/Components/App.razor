@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+
+<!DOCTYPE html>
+<html lang="nl-BE">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GarantieExpress</title>
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["_content/GarantieExpress.UI/css/app.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/GarantieExpress.UI/css/print.css"]" />
+    <link rel="icon" type="image/png" href="@Assets["favicon.png"]" />
+    <link rel="stylesheet" href="@Assets["GarantieExpress.styles.css"]" />
+    <ImportMap />
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+</head>
+<body>
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+    <ReconnectOverlay />
+    <div id="blazor-error-ui">
+        <span class="error-message">Er is een onverwachte fout opgetreden.</span>
+        <a href="." class="reload">Herladen</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script type="module" src="@Assets["_content/GarantieExpress.UI/js/localization.js"]"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+</html>

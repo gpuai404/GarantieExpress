@@ -1,0 +1,13 @@
+@page "/"
+@inject ILocalizationService Localization
+
+<PageTitle>@Localization["Home_Title"] · GarantieExpress</PageTitle>
+<div class="page-heading">
+    <div><p class="eyebrow">GarantieExpress</p><h1>@Localization["Home_Heading"]</h1><p>@Localization["Home_Intro"]</p></div>
+    <a class="button primary" href="uitgeven">@Localization["Home_New"]</a>
+</div>
+<div class="card-grid">
+    <a class="feature-card" href="uitgeven"><span class="card-number">01</span><h2>@Localization["Nav_Issue"]</h2><p>@Localization["Home_IssueText"]</p></a>
+    <a class="feature-card" href="historiek"><span class="card-number">02</span><h2>@Localization["Nav_History"]</h2><p>@Localization["Home_HistoryText"]</p></a>
+    <a class="feature-card" href="instellingen"><span class="card-number">03</span><h2>@Localization["Home_Setup"]</h2><p>@Localization["Home_SetupText"]</p></a>
+</div>

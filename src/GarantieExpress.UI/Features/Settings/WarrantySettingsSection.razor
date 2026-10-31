@@ -1,0 +1,50 @@
+@inject ILocalizationService Localization
+@inject TemplateRegistry Templates
+
+<section class="form-card">
+    <div class="section-heading"><span>02</span><div><h2>@Localization["Settings_Warranty"]</h2><p>@Localization["Settings_WarrantyText"]</p></div></div>
+    <label>@Localization["Settings_Durations"]<input value="@DurationText" @oninput="DurationChanged" inputmode="numeric" /></label>
+    @if (!string.IsNullOrWhiteSpace(DurationError)) { <p class="field-error">@DurationError</p> }
+    <label>@Localization["Settings_DefaultTemplate"]
+        <select value="@CurrentTemplate.DesignKey" @onchange="OnDesignChanged">
+            @foreach (var design in Templates.Designs)
+            {
+                <option value="@design.Key">@Localization[design.NameResourceKey]</option>
+            }
+        </select>
+    </label>
+    <label>@Localization["Settings_DefaultPageSize"]
+        <select value="@CurrentTemplate.PageSizeKey" @onchange="OnPageSizeChanged">
+            @foreach (var pageSize in Templates.PageSizes)
+            {
+                <option value="@pageSize.Key">@Localization[pageSize.NameResourceKey] · @pageSize.WidthMm × @pageSize.HeightMm mm</option>
+            }
+        </select>
+    </label>
+    <label>@Localization["Settings_FullTerms"]<InputTextArea @bind-Value="Settings.DefaultTerms" rows="4" /></label>
+    <label>@Localization["Settings_ShortTerms"]<InputTextArea @bind-Value="Settings.ShortTerms" rows="3" /></label>
+    <label class="checkbox-label"><InputCheckbox @bind-Value="Settings.InkSaver" /> @Localization["Settings_InkSaver"]</label>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public SettingsFormModel Settings { get; set; } = null!;
+    [Parameter] public string DurationText { get; set; } = string.Empty;
+    [Parameter] public string? DurationError { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> DurationChanged { get; set; }
+
+    private WarrantyTemplate CurrentTemplate => Templates.Get(Settings.DefaultTemplate);
+
+    private void OnDesignChanged(ChangeEventArgs args)
+    {
+        Settings.DefaultTemplate = Templates.WithDesign(
+            Settings.DefaultTemplate,
+            args.Value?.ToString()).Key;
+    }
+
+    private void OnPageSizeChanged(ChangeEventArgs args)
+    {
+        Settings.DefaultTemplate = Templates.WithPageSize(
+            Settings.DefaultTemplate,
+            args.Value?.ToString()).Key;
+    }
+}

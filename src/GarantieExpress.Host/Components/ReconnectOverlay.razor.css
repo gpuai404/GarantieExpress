@@ -1,0 +1,36 @@
+.reconnect-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    place-items: center;
+    padding: 1.5rem;
+    background: rgba(23, 43, 56, .72);
+}
+
+.reconnect-overlay.components-reconnect-show,
+.reconnect-overlay.components-reconnect-failed,
+.reconnect-overlay.components-reconnect-rejected {
+    display: grid;
+}
+
+.reconnect-card {
+    width: min(30rem, 100%);
+    padding: 1.5rem;
+    color: #243a48;
+    background: white;
+    border-radius: .75rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .28);
+}
+
+.reconnect-card p,
+.reconnect-card button {
+    display: none;
+}
+
+.components-reconnect-show .components-reconnect-show,
+.components-reconnect-failed .components-reconnect-failed,
+.components-reconnect-rejected .components-reconnect-rejected,
+.components-reconnect-failed #components-reconnect-button {
+    display: block;
+}

@@ -1,0 +1,28 @@
+<div class="preview-viewport">
+    <div class="preview-canvas" style="@CanvasStyle">
+        <DynamicComponent Type="@Template.Component" Parameters="@EffectiveParameters" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public WarrantyTemplate Template { get; set; } = default!;
+    [Parameter, EditorRequired] public WarrantyDisplayModel Model { get; set; } = default!;
+
+    private string CanvasStyle => FormattableString.Invariant(
+        $"--document-width: {Template.WidthMm}mm; --document-height: {Template.HeightMm}mm;");
+
+    private IDictionary<string, object> EffectiveParameters
+    {
+        get
+        {
+            var parameters = new Dictionary<string, object> { [nameof(Model)] = Model };
+            if (Template.StaticParameters is null) return parameters;
+
+            // A duplicate is a descriptor/programming error, so fail instead of silently
+            // allowing a caller to render a component that disagrees with its template.
+            foreach (var (key, value) in Template.StaticParameters)
+                parameters.Add(key, value);
+            return parameters;
+        }
+    }
+}

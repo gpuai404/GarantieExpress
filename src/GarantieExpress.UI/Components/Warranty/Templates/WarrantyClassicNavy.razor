@@ -1,0 +1,112 @@
+@namespace GarantieExpress.UI.Components.Warranty.Templates
+@using System.Globalization
+@using GarantieExpress.UI.Components.Warranty.Primitives
+@inject ThemePresentation ThemePresentation
+
+<article class="warranty-document warranty-classic-navy classic-navy-@NormalizedPageSizeKey" data-template="@TemplateKey" data-print-bounded style="@ThemePresentation.ToCssVariables(Model.Theme)">
+    <header class="classic-navy-store-header">
+        <div class="classic-navy-store-identity">
+            @if (Model.LogoDataUri is not null)
+            {
+                <img src="@Model.LogoDataUri" alt="" />
+            }
+            else
+            {
+                <strong>@Model.StoreName</strong>
+            }
+            <span>@string.Join(" · ", Model.Services)</span>
+        </div>
+        <em>@Model.Slogan</em>
+    </header>
+
+    <section class="classic-navy-title">
+        <div>
+            <span>@Model.Labels.CertificateEyebrow · @Model.Number</span>
+            <h2>@Model.Labels.CertificateTitle</h2>
+        </div>
+        <div class="classic-navy-badge" aria-label="@Model.BadgeText">
+            <strong>@BadgeContent.Value</strong>
+            <span>@BadgeContent.Unit</span>
+        </div>
+    </section>
+
+    <div class="classic-navy-divider"></div>
+
+    <section class="classic-navy-details">
+        <div class="classic-navy-product" data-print-bounded>
+            <div class="classic-navy-heading"><span>01</span><h3>@Model.Labels.ProductDetails</h3></div>
+            <ServiceOptions Options="@Model.ServiceOptions" Note="@Model.RepairNote" />
+            <dl>
+                <div><dt>@Model.Labels.ProductType</dt><dd>@Model.CategoryName</dd></div>
+                <div><dt>@Model.Labels.BrandModel</dt><dd>@Model.BrandModel</dd></div>
+                <div><dt>@Model.SerialLabel</dt><dd>@Model.Serial</dd></div>
+            </dl>
+            <p>@Model.Labels.IdentifierHint</p>
+        </div>
+
+        <div class="classic-navy-purchase" data-print-bounded>
+            <div class="classic-navy-heading"><span>02</span><h3>@Model.Labels.Purchase</h3></div>
+            <dl>
+                <div><dt>@Model.Labels.PurchaseDate</dt><dd>@Model.PurchaseDate</dd></div>
+                <div><dt>@Model.Labels.Price</dt><dd>@Model.Price</dd></div>
+            </dl>
+        </div>
+    </section>
+
+    <section class="classic-navy-warranty" data-print-bounded>
+        <div>
+            <div class="classic-navy-heading"><span>03</span><h3>@Model.Labels.Warranty</h3></div>
+            <DurationOptions Options="@Model.Durations" />
+        </div>
+        <div class="coverage-dates">
+            @if (Model.ValidFrom is not null)
+            {
+                <p><span>@Model.Labels.ValidFrom</span><strong>@Model.ValidFrom</strong></p>
+            }
+            <p><span>@Model.Labels.ValidUntil</span><strong>@Model.EndDate</strong></p>
+        </div>
+    </section>
+
+    <section class="classic-navy-terms" data-print-bounded>
+        <div class="classic-navy-heading"><span>04</span><h3>@Model.Labels.Terms</h3></div>
+        <p data-print-bounded>@Model.Terms</p>
+    </section>
+
+    <section class="classic-navy-signatures">
+        <SignatureLine Label="@Model.Labels.Customer" Hint="@Model.Labels.CustomerName" />
+        <SignatureLine Label="@Model.Labels.Signature" />
+        <SignatureLine Label="@Model.Labels.IssuedOn" Hint="@Model.IssuedDate" />
+    </section>
+
+    <footer class="classic-navy-footer">
+        <div><strong>@Model.StoreName</strong><span>@ContactLine</span></div>
+        <em>@Model.Slogan</em>
+    </footer>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public required WarrantyDisplayModel Model { get; set; }
+    [Parameter] public string PageSizeKey { get; set; } = "a4";
+    [Parameter] public string TemplateKey { get; set; } = "a4-classic-navy";
+
+    private DurationOption? SelectedDuration => Model.Durations.FirstOrDefault(option => option.IsSelected);
+    private string NormalizedPageSizeKey => PageSizeKey is "a5" or "a6" ? PageSizeKey : "a4";
+
+    private (string Value, string Unit) BadgeContent
+    {
+        get
+        {
+            var label = SelectedDuration?.Label.Trim();
+            var separator = label?.IndexOf(' ') ?? -1;
+            if (separator > 0 && int.TryParse(label![..separator], out _))
+                return (label[..separator], label[(separator + 1)..]);
+
+            return (
+                SelectedDuration?.Months.ToString(CultureInfo.InvariantCulture) ?? "—",
+                label ?? Model.BadgeText);
+        }
+    }
+
+    private string ContactLine => string.Join(" · ", new[] { Model.Address, Model.Phone, Model.Vat }
+        .Where(value => !string.IsNullOrWhiteSpace(value)));
+}
